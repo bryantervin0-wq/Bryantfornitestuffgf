@@ -1,0 +1,429 @@
+name: Build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+
+      - name: settings.gradle
+        run: |
+          echo 'pluginManagement {' > settings.gradle
+          echo '  repositories { google(); mavenCentral(); gradlePluginPortal() }' >> settings.gradle
+          echo '}' >> settings.gradle
+          echo 'dependencyResolutionManagement {' >> settings.gradle
+          echo '  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)' >> settings.gradle
+          echo '  repositories { google(); mavenCentral() }' >> settings.gradle
+          echo '}' >> settings.gradle
+          echo 'rootProject.name = "Bryantfornitestuff"' >> settings.gradle
+          echo 'include ":app"' >> settings.gradle
+
+      - name: build.gradle
+        run: |
+          echo 'plugins {' > build.gradle
+          echo '  id "com.android.application" version "8.1.4" apply false' >> build.gradle
+          echo '}' >> build.gradle
+
+      - name: gradle.properties
+        run: |
+          echo 'android.useAndroidX=true' > gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+
+      - name: app/build.gradle
+        run: |
+          mkdir -p app
+          echo 'plugins { id "com.android.application" }' > app/build.gradle
+          echo 'android {' >> app/build.gradle
+          echo '  namespace "com.bryant.bryantfornitestuff"' >> app/build.gradle
+          echo '  compileSdk 33' >> app/build.gradle
+          echo '  defaultConfig {' >> app/build.gradle
+          echo '    applicationId "com.bryant.bryantfornitestuff"' >> app/build.gradle
+          echo '    minSdk 26' >> app/build.gradle
+          echo '    targetSdk 33' >> app/build.gradle
+          echo '    versionCode 1' >> app/build.gradle
+          echo '    versionName "1.0"' >> app/build.gradle
+          echo '  }' >> app/build.gradle
+          echo '  compileOptions {' >> app/build.gradle
+          echo '    sourceCompatibility JavaVersion.VERSION_17' >> app/build.gradle
+          echo '    targetCompatibility JavaVersion.VERSION_17' >> app/build.gradle
+          echo '  }' >> app/build.gradle
+          echo '}' >> app/build.gradle
+          echo 'dependencies { implementation "androidx.appcompat:appcompat:1.6.1" }' >> app/build.gradle
+
+      - name: AndroidManifest.xml
+        run: |
+          mkdir -p app/src/main
+          echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/AndroidManifest.xml
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <application android:label="Bryantfornitestuff" android:theme="@style/Theme.AppCompat.NoActionBar">' >> app/src/main/AndroidManifest.xml
+          echo '    <activity android:name=".MainActivity" android:exported="true">' >> app/src/main/AndroidManifest.xml
+          echo '      <intent-filter>' >> app/src/main/AndroidManifest.xml
+          echo '        <action android:name="android.intent.action.MAIN"/>' >> app/src/main/AndroidManifest.xml
+          echo '        <category android:name="android.intent.category.LAUNCHER"/>' >> app/src/main/AndroidManifest.xml
+          echo '      </intent-filter>' >> app/src/main/AndroidManifest.xml
+          echo '    </activity>' >> app/src/main/AndroidManifest.xml
+          echo '    <service android:name=".OverlayService" android:exported="false"/>' >> app/src/main/AndroidManifest.xml
+          echo '  </application>' >> app/src/main/AndroidManifest.xml
+          echo '</manifest>' >> app/src/main/AndroidManifest.xml
+
+      - name: Native.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          mkdir -p $D
+          echo 'package com.bryant.bryantfornitestuff;' > $D/Native.java
+          echo 'import android.util.Log;' >> $D/Native.java
+          echo 'public class Native {' >> $D/Native.java
+          echo '  static void log(String s){ Log.i("BRYANT",s); }' >> $D/Native.java
+          echo '  public static void init(){ log("init"); }' >> $D/Native.java
+          echo '  public static void setAimbot(boolean v){ log("aimbot="+v); }' >> $D/Native.java
+          echo '  public static void setSilent(boolean v){ log("silent="+v); }' >> $D/Native.java
+          echo '  public static void setRage(boolean v){ log("rage="+v); }' >> $D/Native.java
+          echo '  public static void setNoRecoil(boolean v){ log("norecoil="+v); }' >> $D/Native.java
+          echo '  public static void setNoSpread(boolean v){ log("nospread="+v); }' >> $D/Native.java
+          echo '  public static void setInstantReload(boolean v){ log("instreload="+v); }' >> $D/Native.java
+          echo '  public static void setRapidFire(boolean v){ log("rapidfire="+v); }' >> $D/Native.java
+          echo '  public static void setInfHealth(boolean v){ log("infhealth="+v); }' >> $D/Native.java
+          echo '  public static void setInfAmmo(boolean v){ log("infammo="+v); }' >> $D/Native.java
+          echo '  public static void setSpeed(boolean v){ log("speed="+v); }' >> $D/Native.java
+          echo '  public static void setFlight(boolean v){ log("flight="+v); }' >> $D/Native.java
+          echo '  public static void setNoclip(boolean v){ log("noclip="+v); }' >> $D/Native.java
+          echo '  public static void setGodMode(boolean v){ log("god="+v); }' >> $D/Native.java
+          echo '  public static void setEsp(boolean v){ log("esp="+v); }' >> $D/Native.java
+          echo '  public static void setWallhack(boolean v){ log("wall="+v); }' >> $D/Native.java
+          echo '  public static void setRadar(boolean v){ log("radar="+v); }' >> $D/Native.java
+          echo '  public static void setFullBright(boolean v){ log("bright="+v); }' >> $D/Native.java
+          echo '  public static void setAllSkins(boolean v){ log("skins="+v); }' >> $D/Native.java
+          echo '  public static void setAllEmotes(boolean v){ log("emotes="+v); }' >> $D/Native.java
+          echo '  public static void setAllPickaxes(boolean v){ log("pickaxes="+v); }' >> $D/Native.java
+          echo '  public static void setHideRoot(boolean v){ log("hideroot="+v); }' >> $D/Native.java
+          echo '  public static void setEacBypass(boolean v){ log("eac="+v); }' >> $D/Native.java
+          echo '  public static void setAimSpeed(int v){ log("aimspeed="+v); }' >> $D/Native.java
+          echo '  public static void setFov(int v){ log("fov="+v); }' >> $D/Native.java
+          echo '  public static void setSpeedMult(int v){ log("speedmult="+v); }' >> $D/Native.java
+          echo '}' >> $D/Native.java
+
+      - name: MainActivity.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          echo 'package com.bryant.bryantfornitestuff;' > $D/MainActivity.java
+          echo 'import android.content.Intent;' >> $D/MainActivity.java
+          echo 'import android.net.Uri;' >> $D/MainActivity.java
+          echo 'import android.os.Bundle;' >> $D/MainActivity.java
+          echo 'import android.provider.Settings;' >> $D/MainActivity.java
+          echo 'import androidx.appcompat.app.AppCompatActivity;' >> $D/MainActivity.java
+          echo 'public class MainActivity extends AppCompatActivity {' >> $D/MainActivity.java
+          echo '  protected void onCreate(Bundle b){' >> $D/MainActivity.java
+          echo '    super.onCreate(b);' >> $D/MainActivity.java
+          echo '    if (!Settings.canDrawOverlays(this)) {' >> $D/MainActivity.java
+          echo '      startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())));' >> $D/MainActivity.java
+          echo '    } else {' >> $D/MainActivity.java
+          echo '      startService(new Intent(this, OverlayService.class));' >> $D/MainActivity.java
+          echo '      finish();' >> $D/MainActivity.java
+          echo '    }' >> $D/MainActivity.java
+          echo '  }' >> $D/MainActivity.java
+          echo '}' >> $D/MainActivity.java
+
+      - name: OverlayService.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          echo 'package com.bryant.bryantfornitestuff;' > $D/OverlayService.java
+          echo 'import android.app.*;' >> $D/OverlayService.java
+          echo 'import android.content.Intent;' >> $D/OverlayService.java
+          echo 'import android.graphics.*;' >> $D/OverlayService.java
+          echo 'import android.graphics.drawable.GradientDrawable;' >> $D/OverlayService.java
+          echo 'import android.os.*;' >> $D/OverlayService.java
+          echo 'import android.view.*;' >> $D/OverlayService.java
+          echo 'import android.widget.*;' >> $D/OverlayService.java
+          echo 'public class OverlayService extends Service {' >> $D/OverlayService.java
+          echo '  WindowManager wm;' >> $D/OverlayService.java
+          echo '  WindowManager.LayoutParams params;' >> $D/OverlayService.java
+          echo '  LinearLayout root, full, mini, content;' >> $D/OverlayService.java
+          echo '  boolean isMin=false;' >> $D/OverlayService.java
+          echo '  public IBinder onBind(Intent i){ return null; }' >> $D/OverlayService.java
+          echo '  public void onCreate(){' >> $D/OverlayService.java
+          echo '    super.onCreate();' >> $D/OverlayService.java
+          echo '    if (Build.VERSION.SDK_INT >= 26){' >> $D/OverlayService.java
+          echo '      NotificationChannel ch = new NotificationChannel("b","Bryantfornitestuff",NotificationManager.IMPORTANCE_LOW);' >> $D/OverlayService.java
+          echo '      ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);' >> $D/OverlayService.java
+          echo '      startForeground(1,new Notification.Builder(this,"b").setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build());' >> $D/OverlayService.java
+          echo '    }' >> $D/OverlayService.java
+          echo '    wm=(WindowManager)getSystemService(WINDOW_SERVICE);' >> $D/OverlayService.java
+          echo '    root=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    root.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    full=buildFull();' >> $D/OverlayService.java
+          echo '    mini=buildMini();' >> $D/OverlayService.java
+          echo '    mini.setVisibility(View.GONE);' >> $D/OverlayService.java
+          echo '    root.addView(full);' >> $D/OverlayService.java
+          echo '    root.addView(mini);' >> $D/OverlayService.java
+          echo '    params=new WindowManager.LayoutParams(dp(310),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT);' >> $D/OverlayService.java
+          echo '    params.gravity=Gravity.TOP|Gravity.START;' >> $D/OverlayService.java
+          echo '    params.x=dp(20); params.y=dp(60);' >> $D/OverlayService.java
+          echo '    wm.addView(root,params);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  LinearLayout buildFull(){' >> $D/OverlayService.java
+          echo '    LinearLayout f=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    f.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    f.setBackground(bg("#EE0A0A0A",12));' >> $D/OverlayService.java
+          echo '    f.setPadding(dp(12),dp(10),dp(12),dp(12));' >> $D/OverlayService.java
+          echo '    LinearLayout tr=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    tr.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    TextView t=new TextView(this);' >> $D/OverlayService.java
+          echo '    t.setText("BRYANTFORNITESTUFF");' >> $D/OverlayService.java
+          echo '    t.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    t.setTextSize(14);' >> $D/OverlayService.java
+          echo '    t.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));' >> $D/OverlayService.java
+          echo '    tr.addView(t);' >> $D/OverlayService.java
+          echo '    TextView mn=new TextView(this);' >> $D/OverlayService.java
+          echo '    mn.setText("−");' >> $D/OverlayService.java
+          echo '    mn.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    mn.setTextSize(26);' >> $D/OverlayService.java
+          echo '    mn.setPadding(dp(12),0,dp(12),0);' >> $D/OverlayService.java
+          echo '    mn.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ toggleMin(); } });' >> $D/OverlayService.java
+          echo '    tr.addView(mn);' >> $D/OverlayService.java
+          echo '    tr.setOnTouchListener(new View.OnTouchListener(){ float sx,sy; int px,py; public boolean onTouch(View v,MotionEvent e){ switch(e.getAction()){ case MotionEvent.ACTION_DOWN: sx=e.getRawX(); sy=e.getRawY(); px=params.x; py=params.y; return true; case MotionEvent.ACTION_MOVE: params.x=px+(int)(e.getRawX()-sx); params.y=py+(int)(e.getRawY()-sy); wm.updateViewLayout(root,params); return true;} return false;} });' >> $D/OverlayService.java
+          echo '    f.addView(tr);' >> $D/OverlayService.java
+          echo '    LinearLayout tabs=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    tabs.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    String[] tn={"Combat","Player","Visual","Skins","Config"};' >> $D/OverlayService.java
+          echo '    for (final String x:tn){ TextView tv=new TextView(this); tv.setText(x); tv.setTextColor(Color.parseColor("#00FF9C")); tv.setTextSize(11); tv.setPadding(dp(8),dp(8),dp(8),dp(8)); tv.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ renderTab(x);} }); tabs.addView(tv);}' >> $D/OverlayService.java
+          echo '    f.addView(tabs);' >> $D/OverlayService.java
+          echo '    content=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    content.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    content.setPadding(0,dp(6),0,0);' >> $D/OverlayService.java
+          echo '    f.addView(content);' >> $D/OverlayService.java
+          echo '    renderTab("Combat");' >> $D/OverlayService.java
+          echo '    return f;' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  LinearLayout buildMini(){' >> $D/OverlayService.java
+          echo '    LinearLayout m=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    m.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    m.setBackground(bg("#EE0A0A0A",30));' >> $D/OverlayService.java
+          echo '    m.setPadding(dp(14),dp(8),dp(14),dp(8));' >> $D/OverlayService.java
+          echo '    TextView t=new TextView(this);' >> $D/OverlayService.java
+          echo '    t.setText("B +");' >> $D/OverlayService.java
+          echo '    t.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    t.setTextSize(16);' >> $D/OverlayService.java
+          echo '    m.addView(t);' >> $D/OverlayService.java
+          echo '    m.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ toggleMin(); } });' >> $D/OverlayService.java
+          echo '    m.setOnTouchListener(new View.OnTouchListener(){ float sx,sy; int px,py; boolean drag=false; public boolean onTouch(View v,MotionEvent e){ switch(e.getAction()){ case MotionEvent.ACTION_DOWN: sx=e.getRawX(); sy=e.getRawY(); px=params.x; py=params.y; drag=false; return true; case MotionEvent.ACTION_MOVE: if (Math.abs(e.getRawX()-sx)>10||Math.abs(e.getRawY()-sy)>10) drag=true; params.x=px+(int)(e.getRawX()-sx); params.y=py+(int)(e.getRawY()-sy); wm.updateViewLayout(root,params); return true; case MotionEvent.ACTION_UP: if (!drag) v.performClick(); return true;} return false;} });' >> $D/OverlayService.java
+          echo '    return m;' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void toggleMin(){' >> $D/OverlayService.java
+          echo '    isMin=!isMin;' >> $D/OverlayService.java
+          echo '    full.setVisibility(isMin?View.GONE:View.VISIBLE);' >> $D/OverlayService.java
+          echo '    mini.setVisibility(isMin?View.VISIBLE:View.GONE);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void renderTab(String tab){' >> $D/OverlayService.java
+          echo '    content.removeAllViews();' >> $D/OverlayService.java
+          echo '    if (tab.equals("Combat")){' >> $D/OverlayService.java
+          echo '      sec("COMBAT");' >> $D/OverlayService.java
+          echo '      addT("Aimbot",0); addT("Silent Aim",1); addT("Rage Mode",2);' >> $D/OverlayService.java
+          echo '      addT("No Recoil",3); addT("No Spread",4);' >> $D/OverlayService.java
+          echo '      addT("Instant Reload",5); addT("Rapid Fire",6);' >> $D/OverlayService.java
+          echo '      sl("Aim Speed",1,20,22); sl("FOV",1,360,23);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Player")){' >> $D/OverlayService.java
+          echo '      sec("PLAYER");' >> $D/OverlayService.java
+          echo '      addT("Infinite Health",7); addT("Infinite Ammo",8);' >> $D/OverlayService.java
+          echo '      addT("Speed Boost",9); addT("Flight",10);' >> $D/OverlayService.java
+          echo '      addT("Noclip",11); addT("God Mode",12);' >> $D/OverlayService.java
+          echo '      sl("Speed Mult",1,10,24);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Visual")){' >> $D/OverlayService.java
+          echo '      sec("VISUALS");' >> $D/OverlayService.java
+          echo '      addT("ESP",13); addT("Wallhack",14);' >> $D/OverlayService.java
+          echo '      addT("Radar",15); addT("Full Bright",16);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Skins")){' >> $D/OverlayService.java
+          echo '      sec("SKINS");' >> $D/OverlayService.java
+          echo '      addT("All Skins",17); addT("All Emotes",18); addT("All Pickaxes",19);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Config")){' >> $D/OverlayService.java
+          echo '      sec("CONFIG");' >> $D/OverlayService.java
+          echo '      addT("Hide Root",20); addT("EAC Bypass",21);' >> $D/OverlayService.java
+          echo '      btn("Exit");' >> $D/OverlayService.java
+          echo '    }' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void sec(String s){' >> $D/OverlayService.java
+          echo '    TextView tv=new TextView(this);' >> $D/OverlayService.java
+          echo '    tv.setText(s); tv.setTextColor(Color.parseColor("#00FF9C")); tv.setTextSize(10);' >> $D/OverlayService.java
+          echo '    tv.setPadding(0,dp(8),0,dp(2)); content.addView(tv);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void addT(String label,final int id){' >> $D/OverlayService.java
+          echo '    LinearLayout row=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    row.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    row.setPadding(0,dp(3),0,dp(3));' >> $D/OverlayService.java
+          echo '    TextVionChannel("b","Bryantfornitestuff",NotificationManager.IMPORTANCE_LOW);' >> $D/OverlayService.java
+          echo '      ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);' >> $D/OverlayService.java
+          echo '      startForeground(1,new Notification.Builder(this,"b").setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build());' >> $D/OverlayService.java
+          echo '    }' >> $D/OverlayService.java
+          echo '    wm=(WindowManager)getSystemService(WINDOW_SERVICE);' >> $D/OverlayService.java
+          echo '    root=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    root.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    full=buildFull();' >> $D/OverlayService.java
+          echo '    mini=buildMini();' >> $D/OverlayService.java
+          echo '    mini.setVisibility(View.GONE);' >> $D/OverlayService.java
+          echo '    root.addView(full);' >> $D/OverlayService.java
+          echo '    root.addView(mini);' >> $D/OverlayService.java
+          echo '    params=new WindowManager.LayoutParams(dp(310),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT);' >> $D/OverlayService.java
+          echo '    params.gravity=Gravity.TOP|Gravity.START;' >> $D/OverlayService.java
+          echo '    params.x=dp(20); params.y=dp(60);' >> $D/OverlayService.java
+          echo '    wm.addView(root,params);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  LinearLayout buildFull(){' >> $D/OverlayService.java
+          echo '    LinearLayout f=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    f.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    f.setBackground(bg("#EE0A0A0A",12));' >> $D/OverlayService.java
+          echo '    f.setPadding(dp(12),dp(10),dp(12),dp(12));' >> $D/OverlayService.java
+          echo '    LinearLayout tr=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    tr.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    TextView t=new TextView(this);' >> $D/OverlayService.java
+          echo '    t.setText("BRYANTFORNITESTUFF");' >> $D/OverlayService.java
+          echo '    t.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    t.setTextSize(14);' >> $D/OverlayService.java
+          echo '    t.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));' >> $D/OverlayService.java
+          echo '    tr.addView(t);' >> $D/OverlayService.java
+          echo '    TextView mn=new TextView(this);' >> $D/OverlayService.java
+          echo '    mn.setText("−");' >> $D/OverlayService.java
+          echo '    mn.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    mn.setTextSize(26);' >> $D/OverlayService.java
+          echo '    mn.setPadding(dp(12),0,dp(12),0);' >> $D/OverlayService.java
+          echo '    mn.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ toggleMin(); } });' >> $D/OverlayService.java
+          echo '    tr.addView(mn);' >> $D/OverlayService.java
+          echo '    tr.setOnTouchListener(new View.OnTouchListener(){ float sx,sy; int px,py; public boolean onTouch(View v,MotionEvent e){ switch(e.getAction()){ case MotionEvent.ACTION_DOWN: sx=e.getRawX(); sy=e.getRawY(); px=params.x; py=params.y; return true; case MotionEvent.ACTION_MOVE: params.x=px+(int)(e.getRawX()-sx); params.y=py+(int)(e.getRawY()-sy); wm.updateViewLayout(root,params); return true;} return false;} });' >> $D/OverlayService.java
+          echo '    f.addView(tr);' >> $D/OverlayService.java
+          echo '    LinearLayout tabs=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    tabs.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    String[] tn={"Combat","Player","Visual","Skins","Config"};' >> $D/OverlayService.java
+          echo '    for (final String x:tn){ TextView tv=new TextView(this); tv.setText(x); tv.setTextColor(Color.parseColor("#00FF9C")); tv.setTextSize(11); tv.setPadding(dp(8),dp(8),dp(8),dp(8)); tv.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ renderTab(x);} }); tabs.addView(tv);}' >> $D/OverlayService.java
+          echo '    f.addView(tabs);' >> $D/OverlayService.java
+          echo '    content=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    content.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    content.setPadding(0,dp(6),0,0);' >> $D/OverlayService.java
+          echo '    f.addView(content);' >> $D/OverlayService.java
+          echo '    renderTab("Combat");' >> $D/OverlayService.java
+          echo '    return f;' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  LinearLayout buildMini(){' >> $D/OverlayService.java
+          echo '    LinearLayout m=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    m.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    m.setBackground(bg("#EE0A0A0A",30));' >> $D/OverlayService.java
+          echo '    m.setPadding(dp(14),dp(8),dp(14),dp(8));' >> $D/OverlayService.java
+          echo '    TextView t=new TextView(this);' >> $D/OverlayService.java
+          echo '    t.setText("B +");' >> $D/OverlayService.java
+          echo '    t.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    t.setTextSize(16);' >> $D/OverlayService.java
+          echo '    m.addView(t);' >> $D/OverlayService.java
+          echo '    m.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ toggleMin(); } });' >> $D/OverlayService.java
+          echo '    m.setOnTouchListener(new View.OnTouchListener(){ float sx,sy; int px,py; boolean drag=false; public boolean onTouch(View v,MotionEvent e){ switch(e.getAction()){ case MotionEvent.ACTION_DOWN: sx=e.getRawX(); sy=e.getRawY(); px=params.x; py=params.y; drag=false; return true; case MotionEvent.ACTION_MOVE: if (Math.abs(e.getRawX()-sx)>10||Math.abs(e.getRawY()-sy)>10) drag=true; params.x=px+(int)(e.getRawX()-sx); params.y=py+(int)(e.getRawY()-sy); wm.updateViewLayout(root,params); return true; case MotionEvent.ACTION_UP: if (!drag) v.performClick(); return true;} return false;} });' >> $D/OverlayService.java
+          echo '    return m;' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void toggleMin(){' >> $D/OverlayService.java
+          echo '    isMin=!isMin;' >> $D/OverlayService.java
+          echo '    full.setVisibility(isMin?View.GONE:View.VISIBLE);' >> $D/OverlayService.java
+          echo '    mini.setVisibility(isMin?View.VISIBLE:View.GONE);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void renderTab(String tab){' >> $D/OverlayService.java
+          echo '    content.removeAllViews();' >> $D/OverlayService.java
+          echo '    if (tab.equals("Combat")){' >> $D/OverlayService.java
+          echo '      sec("COMBAT");' >> $D/OverlayService.java
+          echo '      addT("Aimbot",0); addT("Silent Aim",1); addT("Rage Mode",2);' >> $D/OverlayService.java
+          echo '      addT("No Recoil",3); addT("No Spread",4);' >> $D/OverlayService.java
+          echo '      addT("Instant Reload",5); addT("Rapid Fire",6);' >> $D/OverlayService.java
+          echo '      sl("Aim Speed",1,20,22); sl("FOV",1,360,23);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Player")){' >> $D/OverlayService.java
+          echo '      sec("PLAYER");' >> $D/OverlayService.java
+          echo '      addT("Infinite Health",7); addT("Infinite Ammo",8);' >> $D/OverlayService.java
+          echo '      addT("Speed Boost",9); addT("Flight",10);' >> $D/OverlayService.java
+          echo '      addT("Noclip",11); addT("God Mode",12);' >> $D/OverlayService.java
+          echo '      sl("Speed Mult",1,10,24);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Visual")){' >> $D/OverlayService.java
+          echo '      sec("VISUALS");' >> $D/OverlayService.java
+          echo '      addT("ESP",13); addT("Wallhack",14);' >> $D/OverlayService.java
+          echo '      addT("Radar",15); addT("Full Bright",16);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Skins")){' >> $D/OverlayService.java
+          echo '      sec("SKINS");' >> $D/OverlayService.java
+          echo '      addT("All Skins",17); addT("All Emotes",18); addT("All Pickaxes",19);' >> $D/OverlayService.java
+          echo '    } else if (tab.equals("Config")){' >> $D/OverlayService.java
+          echo '      sec("CONFIG");' >> $D/OverlayService.java
+          echo '      addT("Hide Root",20); addT("EAC Bypass",21);' >> $D/OverlayService.java
+          echo '      btn("Exit");' >> $D/OverlayService.java
+          echo '    }' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void sec(String s){' >> $D/OverlayService.java
+          echo '    TextView tv=new TextView(this);' >> $D/OverlayService.java
+          echo '    tv.setText(s); tv.setTextColor(Color.parseColor("#00FF9C")); tv.setTextSize(10);' >> $D/OverlayService.java
+          echo '    tv.setPadding(0,dp(8),0,dp(2)); content.addView(tv);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void addT(String label,final int id){' >> $D/OverlayService.java
+          echo '    LinearLayout row=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    row.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    row.setPadding(0,dp(3),0,dp(3));' >> $D/OverlayService.java
+          echo '    TextView tv=new TextView(this);' >> $D/OverlayService.java
+          echo '    tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13);' >> $D/OverlayService.java
+          echo '    tv.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));' >> $D/OverlayService.java
+          echo '    row.addView(tv);' >> $D/OverlayService.java
+          echo '    Switch s=new Switch(this);' >> $D/OverlayService.java
+          echo '    s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){ public void onCheckedChanged(CompoundButton b,boolean v){ setF(id,v);} });' >> $D/OverlayService.java
+          echo '    row.addView(s); content.addView(row);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void sl(String label,final int min,int max,final int id){' >> $D/OverlayService.java
+          echo '    LinearLayout col=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    col.setOrientation(LinearLayout.VERTICAL); col.setPadding(0,dp(3),0,dp(3));' >> $D/OverlayService.java
+          echo '    final TextView tv=new TextView(this); tv.setText(label+": "+min); tv.setTextColor(Color.WHITE); tv.setTextSize(13); col.addView(tv);' >> $D/OverlayService.java
+          echo '    SeekBar sb=new SeekBar(this); sb.setMax(max-min); sb.setProgress(0);' >> $D/OverlayService.java
+          echo '    sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){ public void onProgressChanged(SeekBar s,int p,boolean u){ int v=p+min; tv.setText(label+": "+v); setI(id,v);} public void onStartTrackingTouch(SeekBar s){} public void onStopTrackingTouch(SeekBar s){} });' >> $D/OverlayService.java
+          echo '    col.addView(sb); content.addView(col);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void btn(String label){' >> $D/OverlayService.java
+          echo '    Button b=new Button(this); b.setText(label); b.setTextColor(Color.parseColor("#00FF9C")); b.setBackground(bg("#1A1A1A",6));' >> $D/OverlayService.java
+          echo '    b.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ stopSelf(); } });' >> $D/OverlayService.java
+          echo '    content.addView(b);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void setF(int id,boolean v){' >> $D/OverlayService.java
+          echo '    if (id==0) Native.setAimbot(v);' >> $D/OverlayService.java
+          echo '    else if (id==1) Native.setSilent(v);' >> $D/OverlayService.java
+          echo '    else if (id==2) Native.setRage(v);' >> $D/OverlayService.java
+          echo '    else if (id==3) Native.setNoRecoil(v);' >> $D/OverlayService.java
+          echo '    else if (id==4) Native.setNoSpread(v);' >> $D/OverlayService.java
+          echo '    else if (id==5) Native.setInstantReload(v);' >> $D/OverlayService.java
+          echo '    else if (id==6) Native.setRapidFire(v);' >> $D/OverlayService.java
+          echo '    else if (id==7) Native.setInfHealth(v);' >> $D/OverlayService.java
+          echo '    else if (id==8) Native.setInfAmmo(v);' >> $D/OverlayService.java
+          echo '    else if (id==9) Native.setSpeed(v);' >> $D/OverlayService.java
+          echo '    else if (id==10) Native.setFlight(v);' >> $D/OverlayService.java
+          echo '    else if (id==11) Native.setNoclip(v);' >> $D/OverlayService.java
+          echo '    else if (id==12) Native.setGodMode(v);' >> $D/OverlayService.java
+          echo '    else if (id==13) Native.setEsp(v);' >> $D/OverlayService.java
+          echo '    else if (id==14) Native.setWallhack(v);' >> $D/OverlayService.java
+          echo '    else if (id==15) Native.setRadar(v);' >> $D/OverlayService.java
+          echo '    else if (id==16) Native.setFullBright(v);' >> $D/OverlayService.java
+          echo '    else if (id==17) Native.setAllSkins(v);' >> $D/OverlayService.java
+          echo '    else if (id==18) Native.setAllEmotes(v);' >> $D/OverlayService.java
+          echo '    else if (id==19) Native.setAllPickaxes(v);' >> $D/OverlayService.java
+          echo '    else if (id==20) Native.setHideRoot(v);' >> $D/OverlayService.java
+          echo '    else if (id==21) Native.setEacBypass(v);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void setI(int id,int v){' >> $D/OverlayService.java
+          echo '    if (id==22) Native.setAimSpeed(v);' >> $D/OverlayService.java
+          echo '    else if (id==23) Native.setFov(v);' >> $D/OverlayService.java
+          echo '    else if (id==24) Native.setSpeedMult(v);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  GradientDrawable bg(String c,int r){ GradientDrawable d=new GradientDrawable(); d.setColor(Color.parseColor(c)); d.setCornerRadius(dp(r)); return d; }' >> $D/OverlayService.java
+          echo '  int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density); }' >> $D/OverlayService.java
+          echo '  public void onDestroy(){ super.onDestroy(); if (root!=null) wm.removeView(root); stopForeground(true); }' >> $D/OverlayService.java
+          echo '}' >> $D/OverlayService.java
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bryantfornitestuff-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
