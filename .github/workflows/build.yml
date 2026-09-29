@@ -382,6 +382,164 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Bryantfornitestuff-apk
+          path: BryantFN/app/build/outputs/apk/release/app-release.apk(8), 0, dp(8), 0);
+                  collapse.setOnClickListener(new View.OnClickListener() {
+                      public void onClick(View v) { toggleCollapse(); }
+                  });
+                  titleRow.addView(collapse);
+
+                  titleRow.setOnTouchListener(new View.OnTouchListener() {
+                      float sx, sy; int px, py;
+                      public boolean onTouch(View v, MotionEvent e) {
+                          switch (e.getAction()) {
+                              case MotionEvent.ACTION_DOWN:
+                                  sx = e.getRawX(); sy = e.getRawY();
+                                  px = params.x; py = params.y; return true;
+                              case MotionEvent.ACTION_MOVE:
+                                  params.x = px + (int)(e.getRawX() - sx);
+                                  params.y = py + (int)(e.getRawY() - sy);
+                                  wm.updateViewLayout(root, params); return true;
+                          }
+                          return false;
+                      }
+                  });
+                  r.addView(titleRow);
+
+                  bodyWrapper = new LinearLayout(this);
+                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
+
+                  LinearLayout tabs = new LinearLayout(this);
+                  tabs.setOrientation(LinearLayout.HORIZONTAL);
+                  String[] tabNames = {"Combat","Player","Visuals","Skins","Settings"};
+                  for (String t : tabNames) tabs.addView(makeTab(t));
+                  bodyWrapper.addView(tabs);
+
+                  content = new LinearLayout(this);
+                  content.setOrientation(LinearLayout.VERTICAL);
+                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
+                  bodyWrapper.addView(content);
+
+                  r.addView(bodyWrapper);
+                  return r;
+              }
+
+              private View makeTab(final String name) {
+                  TextView tv = new TextView(this);
+                  tv.setText(name);
+                  tv.setTextColor(Color.parseColor("#00FF9C"));
+                  tv.setTextSize(11);
+                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
+                  tv.setOnClickListener(new View.OnClickListener() {
+                      public void onClick(View v) { renderTab(name); }
+                  });
+                  return tv;
+              }
+
+              private void toggleCollapse() {
+                  collapsed = !collapsed;
+                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
+              }
+
+              private void renderTab(String tab) {
+                  content.removeAllViews();
+                  if (tab.equals("Combat")) {
+                      addToggle("Aimbot", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setAimbot(v); } });
+                      addToggle("Silent Aim", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSilent(v); } });
+                      addToggle("Rage Mode", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setRage(v); } });
+                      addSlider("Aim Speed", 1, 20, new IntConsumer() { public void accept(int v) { Native.setAimSpeed(v); } });
+                      addSlider("FOV", 1, 360, new IntConsumer() { public void accept(int v) { Native.setFov(v); } });
+                  } else if (tab.equals("Player")) {
+                      addToggle("Infinite Health", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setInfHealth(v); } });
+                      addToggle("Speed Boost", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSpeed(v); } });
+                      addSlider("Speed Mult", 1, 10, new IntConsumer() { public void accept(int v) { Native.setSpeedMult(v); } });
+                      addToggle("Flight", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setFlight(v); } });
+                      addToggle("Noclip", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setNoclip(v); } });
+                  } else if (tab.equals("Visuals")) {
+                      addToggle("ESP", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setEsp(v); } });
+                  } else if (tab.equals("Skins")) {
+                      addButton("Unlock All Skins", new View.OnClickListener() { public void onClick(View v) { Native.setAllSkins(true); } });
+                  } else if (tab.equals("Settings")) {
+                      addButton("Exit", new View.OnClickListener() { public void onClick(View v) { stopSelf(); } });
+                  }
+              }
+
+              private void addToggle(String label, final Consumer<Boolean> cb) {
+                  LinearLayout row = new LinearLayout(this);
+                  row.setOrientation(LinearLayout.HORIZONTAL);
+                  row.setPadding(0, dp(4), 0, dp(4));
+                  TextView tv = new TextView(this);
+                  tv.setText(label);
+                  tv.setTextColor(Color.WHITE);
+                  tv.setTextSize(13);
+                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+                  row.addView(tv);
+                  Switch s = new Switch(this);
+                  s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                      public void onCheckedChanged(CompoundButton b, boolean v) { cb.accept(v); }
+                  });
+                  row.addView(s);
+                  content.addView(row);
+              }
+
+              private void addSlider(String label, final int min, int max, final IntConsumer cb) {
+                  LinearLayout col = new LinearLayout(this);
+                  col.setOrientation(LinearLayout.VERTICAL);
+                  col.setPadding(0, dp(4), 0, dp(4));
+                  final TextView tv = new TextView(this);
+                  tv.setText(label + ": " + min);
+                  tv.setTextColor(Color.WHITE);
+                  tv.setTextSize(13);
+                  col.addView(tv);
+                  SeekBar sb = new SeekBar(this);
+                  sb.setMax(max - min);
+                  sb.setProgress(0);
+                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                      public void onProgressChanged(SeekBar s, int p, boolean u) {
+                          int v = p + min;
+                          tv.setText(label + ": " + v);
+                          cb.accept(v);
+                      }
+                      public void onStartTrackingTouch(SeekBar s) {}
+                      public void onStopTrackingTouch(SeekBar s) {}
+                  });
+                  col.addView(sb);
+                  content.addView(col);
+              }
+
+              private void addButton(String label, View.OnClickListener l) {
+                  Button b = new Button(this);
+                  b.setText(label);
+                  b.setTextColor(Color.parseColor("#00FF9C"));
+                  b.setBackground(rounded("#1A1A1A", 6));
+                  b.setOnClickListener(l);
+                  content.addView(b);
+              }
+
+              private GradientDrawable rounded(String color, int radiusDp) {
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(Color.parseColor(color));
+                  d.setCornerRadius(dp(radiusDp));
+                  return d;
+              }
+
+              private int dp(int v) {
+                  return (int)(v * getResources().getDisplayMetrics().density);
+              }
+
+              @Override
+              public void onDestroy() {
+                  super.onDestroy();
+                  if (root != null) wm.removeView(root);
+                  stopForeground(true);
+              }
+          }
+          XEOF
+          echo "Generated."
+      - name: Build APK
+        run: cd BryantFN && gradle assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bryantfornitestuff-apk
           path: BryantFN/app/build/outputs/apk/release/app-release.apketPadding(dp(6), dp(4), dp(6), dp(8));
 
                   TextView title = new TextView(this);
