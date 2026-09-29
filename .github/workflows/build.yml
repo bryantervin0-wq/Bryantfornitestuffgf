@@ -12,8 +12,8 @@ jobs:
       - name: Install NDK
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
       - uses: gradle/actions/setup-gradle@v3
       - name: Generate project
         run: |
@@ -22,11 +22,18 @@ jobs:
           cd BryantFN
           cat > settings.gradle <<'XEOF'
           pluginManagement {
-              repositories { google(); mavenCentral(); gradlePluginPortal() }
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
           }
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories { google(); mavenCentral() }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
           }
           rootProject.name = "Bryantfornitestuff"
           include ':app'
@@ -36,50 +43,70 @@ jobs:
               id 'com.android.application' version '8.2.0' apply false
           }
           XEOF
+          cat > gradle.properties <<'XEOF'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx2048m
+          XEOF
           cat > app/build.gradle <<'XEOF'
-          plugins { id 'com.android.application' }
+          plugins {
+              id 'com.android.application'
+          }
           android {
               namespace 'com.bryant.bryantfornitestuff'
               compileSdk 34
-              ndkVersion "26.1.10909125"
+              ndkVersion "25.2.9519653"
               defaultConfig {
                   applicationId "com.bryant.bryantfornitestuff"
                   minSdk 26
                   targetSdk 34
                   versionCode 1
                   versionName "1.0"
-                  ndk { abiFilters 'arm64-v8a' }
-                  externalNativeBuild { cmake { cppFlags '-std=c++20 -O2' } }
+                  ndk {
+                      abiFilters 'arm64-v8a'
+                  }
+                  externalNativeBuild {
+                      cmake {
+                          cppFlags '-std=c++20 -O2'
+                      }
+                  }
               }
-              externalNativeBuild { cmake { path 'src/main/cpp/CMakeLists.txt' } }
-              buildTypes { release { minifyEnabled false } }
+              externalNativeBuild {
+                  cmake {
+                      path 'src/main/cpp/CMakeLists.txt'
+                  }
+              }
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
               }
           }
-          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
+          dependencies {
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+          }
           XEOF
           cat > app/src/main/AndroidManifest.xml <<'XEOF'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.bryant.bryantfornitestuff">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-              <uses-permission android:name="android.permission.INTERNET"/>
               <application
                   android:label="Bryantfornitestuff"
-                  android:extractNativeLibs="true"
-                  android:usesCleartextTraffic="true">
+                  android:theme="@style/Theme.AppCompat.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
-                  <service android:name=".OverlayService"
+                  <service
+                      android:name=".OverlayService"
                       android:exported="false"
                       android:foregroundServiceType="specialUse"/>
               </application>
@@ -87,16 +114,21 @@ jobs:
           XEOF
           cat > app/src/main/java/com/bryant/bryantfornitestuff/MainActivity.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
+
           import android.content.Intent;
           import android.net.Uri;
           import android.os.Build;
           import android.os.Bundle;
           import android.provider.Settings;
           import androidx.appcompat.app.AppCompatActivity;
+
           public class MainActivity extends AppCompatActivity {
-              @Override protected void onCreate(Bundle b) {
+              @Override
+              protected void onCreate(Bundle b) {
                   super.onCreate(b);
-                  if (Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
+                  if (Build.VERSION.SDK_INT >= 33) {
+                      requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
+                  }
                   if (!Settings.canDrawOverlays(this)) {
                       startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                           Uri.parse("package:" + getPackageName())));
@@ -110,8 +142,11 @@ jobs:
           XEOF
           cat > app/src/main/java/com/bryant/bryantfornitestuff/Native.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
+
           public class Native {
-              static { System.loadLibrary("bryantfornitestuff"); }
+              static {
+                  System.loadLibrary("bryantfornitestuff");
+              }
               public static native void init();
               public static native void setAimbot(boolean v);
               public static native void setSilent(boolean v);
@@ -129,20 +164,40 @@ jobs:
           XEOF
           cat > app/src/main/java/com/bryant/bryantfornitestuff/OverlayService.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
-          import android.app.*;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.Service;
           import android.content.Intent;
-          import android.graphics.*;
+          import android.graphics.Color;
+          import android.graphics.PixelFormat;
           import android.graphics.drawable.GradientDrawable;
-          import android.os.*;
-          import android.view.*;
-          import android.widget.*;
+          import android.os.Build;
+          import android.os.IBinder;
+          import android.view.Gravity;
+          import android.view.MotionEvent;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.SeekBar;
+          import android.widget.Switch;
+          import android.widget.TextView;
+          import java.util.function.Consumer;
+          import java.util.function.IntConsumer;
+
           public class OverlayService extends Service {
               private WindowManager wm;
               private WindowManager.LayoutParams params;
               private LinearLayout root, content, bodyWrapper;
               private boolean collapsed = false;
-              @Override public IBinder onBind(Intent i) { return null; }
-              @Override public void onCreate() {
+
+              @Override
+              public IBinder onBind(Intent i) { return null; }
+
+              @Override
+              public void onCreate() {
                   super.onCreate();
                   String chId = "bryant";
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -153,6 +208,7 @@ jobs:
                       ? new Notification.Builder(this, chId).setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build()
                       : new Notification.Builder(this).setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build();
                   startForeground(1, n);
+
                   wm = (WindowManager) getSystemService(WINDOW_SERVICE);
                   root = buildRoot();
                   params = new WindowManager.LayoutParams(
@@ -161,31 +217,39 @@ jobs:
                       WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                       PixelFormat.TRANSLUCENT);
                   params.gravity = Gravity.TOP | Gravity.START;
-                  params.x = dp(20); params.y = dp(60);
+                  params.x = dp(20);
+                  params.y = dp(60);
                   wm.addView(root, params);
                   renderTab("Combat");
               }
+
               private LinearLayout buildRoot() {
                   LinearLayout r = new LinearLayout(this);
                   r.setOrientation(LinearLayout.VERTICAL);
                   r.setBackground(rounded("#CC0A0A0A", 12));
                   r.setPadding(dp(10), dp(10), dp(10), dp(10));
+
                   LinearLayout titleRow = new LinearLayout(this);
                   titleRow.setOrientation(LinearLayout.HORIZONTAL);
                   titleRow.setPadding(dp(6), dp(4), dp(6), dp(8));
+
                   TextView title = new TextView(this);
                   title.setText("BRYANTFORNITESTUFF");
                   title.setTextColor(Color.parseColor("#00FF9C"));
                   title.setTextSize(15);
                   title.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
                   titleRow.addView(title);
+
                   TextView collapse = new TextView(this);
-                  collapse.setText("—");
+                  collapse.setText("_");
                   collapse.setTextColor(Color.parseColor("#00FF9C"));
-                  collapse.setTextSize(20);
+                  collapse.setTextSize(22);
                   collapse.setPadding(dp(8), 0, dp(8), 0);
-                  collapse.setOnClickListener(v -> toggleCollapse());
+                  collapse.setOnClickListener(new View.OnClickListener() {
+                      public void onClick(View v) { toggleCollapse(); }
+                  });
                   titleRow.addView(collapse);
+
                   titleRow.setOnTouchListener(new View.OnTouchListener() {
                       float sx, sy; int px, py;
                       public boolean onTouch(View v, MotionEvent e) {
@@ -193,6 +257,183 @@ jobs:
                               case MotionEvent.ACTION_DOWN:
                                   sx = e.getRawX(); sy = e.getRawY();
                                   px = params.x; py = params.y; return true;
+                              case MotionEvent.ACTION_MOVE:
+                                  params.x = px + (int)(e.getRawX() - sx);
+                                  params.y = py + (int)(e.getRawY() - sy);
+                                  wm.updateViewLayout(root, params); return true;
+                          }
+                          return false;
+                      }
+                  });
+                  r.addView(titleRow);
+
+                  bodyWrapper = new LinearLayout(this);
+                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
+
+                  LinearLayout tabs = new LinearLayout(this);
+                  tabs.setOrientation(LinearLayout.HORIZONTAL);
+                  String[] tabNames = {"Combat","Player","Visuals","Skins","Settings"};
+                  for (String t : tabNames) tabs.addView(makeTab(t));
+                  bodyWrapper.addView(tabs);
+
+                  content = new LinearLayout(this);
+                  content.setOrientation(LinearLayout.VERTICAL);
+                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
+                  bodyWrapper.addView(content);
+
+                  r.addView(bodyWrapper);
+                  return r;
+              }
+
+              private View makeTab(final String name) {
+                  TextView tv = new TextView(this);
+                  tv.setText(name);
+                  tv.setTextColor(Color.parseColor("#00FF9C"));
+                  tv.setTextSize(11);
+                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
+                  tv.setOnClickListener(new View.OnClickListener() {
+                      public void onClick(View v) { renderTab(name); }
+                  });
+                  return tv;
+              }
+
+              private void toggleCollapse() {
+                  collapsed = !collapsed;
+                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
+              }
+
+              private void renderTab(String tab) {
+                  content.removeAllViews();
+                  if (tab.equals("Combat")) {
+                      addToggle("Aimbot", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setAimbot(v); } });
+                      addToggle("Silent Aim", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSilent(v); } });
+                      addToggle("Rage Mode", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setRage(v); } });
+                      addSlider("Aim Speed", 1, 20, new IntConsumer() { public void accept(int v) { Native.setAimSpeed(v); } });
+                      addSlider("FOV", 1, 360, new IntConsumer() { public void accept(int v) { Native.setFov(v); } });
+                  } else if (tab.equals("Player")) {
+                      addToggle("Infinite Health", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setInfHealth(v); } });
+                      addToggle("Speed Boost", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSpeed(v); } });
+                      addSlider("Speed Mult", 1, 10, new IntConsumer() { public void accept(int v) { Native.setSpeedMult(v); } });
+                      addToggle("Flight", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setFlight(v); } });
+                      addToggle("Noclip", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setNoclip(v); } });
+                  } else if (tab.equals("Visuals")) {
+                      addToggle("ESP", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setEsp(v); } });
+                  } else if (tab.equals("Skins")) {
+                      addButton("Unlock All Skins", new View.OnClickListener() { public void onClick(View v) { Native.setAllSkins(true); } });
+                  } else if (tab.equals("Settings")) {
+                      addButton("Exit", new View.OnClickListener() { public void onClick(View v) { stopSelf(); } });
+                  }
+              }
+
+              private void addToggle(String label, final Consumer<Boolean> cb) {
+                  LinearLayout row = new LinearLayout(this);
+                  row.setOrientation(LinearLayout.HORIZONTAL);
+                  row.setPadding(0, dp(4), 0, dp(4));
+                  TextView tv = new TextView(this);
+                  tv.setText(label);
+                  tv.setTextColor(Color.WHITE);
+                  tv.setTextSize(13);
+                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+                  row.addView(tv);
+                  Switch s = new Switch(this);
+                  s.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+                      public void onCheckedChanged(android.widget.CompoundButton b, boolean v) { cb.accept(v); }
+                  });
+                  row.addView(s);
+                  content.addView(row);
+              }
+
+              private void addSlider(String label, final int min, int max, final IntConsumer cb) {
+                  LinearLayout col = new LinearLayout(this);
+                  col.setOrientation(LinearLayout.VERTICAL);
+                  col.setPadding(0, dp(4), 0, dp(4));
+                  final TextView tv = new TextView(this);
+                  tv.setText(label + ": " + min);
+                  tv.setTextColor(Color.WHITE);
+                  tv.setTextSize(13);
+                  col.addView(tv);
+                  SeekBar sb = new SeekBar(this);
+                  sb.setMax(max - min);
+                  sb.setProgress(0);
+                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                      public void onProgressChanged(SeekBar s, int p, boolean u) {
+                          int v = p + min;
+                          tv.setText(label + ": " + v);
+                          cb.accept(v);
+                      }
+                      public void onStartTrackingTouch(SeekBar s) {}
+                      public void onStopTrackingTouch(SeekBar s) {}
+                  });
+                  col.addView(sb);
+                  content.addView(col);
+              }
+
+              private void addButton(String label, View.OnClickListener l) {
+                  Button b = new Button(this);
+                  b.setText(label);
+                  b.setTextColor(Color.parseColor("#00FF9C"));
+                  b.setBackground(rounded("#1A1A1A", 6));
+                  b.setOnClickListener(l);
+                  content.addView(b);
+              }
+
+              private GradientDrawable rounded(String color, int radiusDp) {
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(Color.parseColor(color));
+                  d.setCornerRadius(dp(radiusDp));
+                  return d;
+              }
+
+              private int dp(int v) {
+                  return (int)(v * getResources().getDisplayMetrics().density);
+              }
+
+              @Override
+              public void onDestroy() {
+                  super.onDestroy();
+                  if (root != null) wm.removeView(root);
+                  stopForeground(true);
+              }
+          }
+          XEOF
+          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
+          cmake_minimum_required(VERSION 3.18)
+          project(bryantfornitestuff LANGUAGES CXX)
+          add_library(bryantfornitestuff SHARED axion.cpp)
+          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
+          target_link_libraries(bryantfornitestuff log android)
+          XEOF
+          cat > app/src/main/cpp/axion.cpp <<'XEOF'
+          #include <jni.h>
+          #include <cstdint>
+          #include <cstring>
+          #include <cstdio>
+          #include <cstdlib>
+          #include <unistd.h>
+          #include <fcntl.h>
+          #include <thread>
+          #include <atomic>
+          #include <fstream>
+          #include <map>
+          #include <string>
+          #include <sys/ptrace.h>
+          #include <sys/wait.h>
+          #include <android/log.h>
+
+          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
+
+          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
+          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
+          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
+          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
+
+          static pid_t g_pid = -1;
+          static int g_memfd = -1;
+          static uintptr_t g_base = 0;
+          static std::map<std::string, uintptr_t> OFF;
+
+          static void load_offsets() {
+           y; return true;
                               case MotionEvent.ACTION_MOVE:
                                   params.x = px + (int)(e.getRawX() - sx);
                                   params.y = py + (int)(e.getRawY() - sy);
