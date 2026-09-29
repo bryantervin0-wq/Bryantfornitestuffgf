@@ -12,1149 +12,202 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.2'
-      - name: Write files
+
+      - name: settings.gradle
         run: |
-          mkdir -p app/src/main/java/com/bryant/bryantfornitestuff
-          printf '%b' 'pluginManagement {\n    repositories { google(); mavenCentral(); gradlePluginPortal() }\n}\ndependencyResolutionManagement {\n    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)\n    repositories { google(); mavenCentral() }\n}\nrootProject.name = "Bryantfornitestuff"\ninclude ":app"\n' > settings.gradle
-          printf '%b' 'plugins {\n    id "com.android.application" version "8.1.4" apply false\n}\n' > build.gradle
-          printf '%b' 'android.useAndroidX=true\norg.gradle.jvmargs=-Xmx2048m\n' > gradle.properties
-          printf '%b' 'plugins { id "com.android.application" }\nandroid {\n    namespace "com.bryant.bryantfornitestuff"\n    compileSdk 33\n    defaultConfig {\n        applicationId "com.bryant.bryantfornitestuff"\n        minSdk 26\n        targetSdk 33\n        versionCode 1\n        versionName "1.0"\n    }\n    buildTypes { release { minifyEnabled false } }\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }\n}\ndependencies { implementation "androidx.appcompat:appcompat:1.6.1" }\n' > app/build.gradle
-          printf '%b' '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application android:label="Bryantfornitestuff" android:theme="@style/Theme.AppCompat.NoActionBar">\n        <activity android:name=".MainActivity" android:exported="true">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN"/>\n                <category android:name="android.intent.category.LAUNCHER"/>\n            </intent-filter>\n        </activity>\n        <service android:name=".OverlayService" android:exported="false"/>\n    </application>\n</manifest>\n' > app/src/main/AndroidManifest.xml
-          printf '%b' 'package com.bryant.bryantfornitestuff;\nimport android.content.Intent;\nimport android.net.Uri;\nimport android.os.Build;\nimport android.os.Bundle;\nimport android.provider.Settings;\nimport androidx.appcompat.app.AppCompatActivity;\npublic class MainActivity extends AppCompatActivity {\n    protected void onCreate(Bundle b) {\n        super.onCreate(b);\n        if (Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);\n        if (!Settings.canDrawOverlays(this)) startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())));\n        else { startService(new Intent(this, OverlayService.class)); finish(); }\n    }\n}\n' > app/src/main/java/com/bryant/bryantfornitestuff/MainActivity.java
-          printf '%b' 'package com.bryant.bryantfornitestuff;\nimport android.util.Log;\npublic class Native {\n    public static void init() { Log.i("BRYANT","init"); }\n    public static void setAimbot(boolean v) { Log.i("BRYANT","aimbot="+v); }\n    public static void setSilent(boolean v) { Log.i("BRYANT","silent="+v); }\n    public static void setRage(boolean v) { Log.i("BRYANT","rage="+v); }\n    public static void setInfHealth(boolean v) { Log.i("BRYANT","infHealth="+v); }\n    public static void setSpeed(boolean v) { Log.i("BRYANT","speed="+v); }\n    public static void setFlight(boolean v) { Log.i("BRYANT","flight="+v); }\n    public static void setNoclip(boolean v) { Log.i("BRYANT","noclip="+v); }\n    public static void setAllSkins(boolean v) { Log.i("BRYANT","allSkins="+v); }\n    public static void setEsp(boolean v) { Log.i("BRYANT","esp="+v); }\n    public static void setAimSpeed(int v) { Log.i("BRYANT","aimSpeed="+v); }\n    public static void setFov(int v) { Log.i("BRYANT","fov="+v); }\n    public static void setSpeedMult(int v) { Log.i("BRYANT","speedMult="+v); }\n}\n' > app/src/main/java/com/bryant/bryantfornitestuff/Native.java
-          printf '%b' 'package com.bryant.bryantfornitestuff;\nimport android.app.*;\nimport android.content.Intent;\nimport android.graphics.*;\nimport android.graphics.drawable.GradientDrawable;\nimport android.os.*;\nimport android.view.*;\nimport android.widget.*;\nimport java.util.function.Consumer;\nimport java.util.function.IntConsumer;\npublic class OverlayService extends Service {\n    WindowManager wm; WindowManager.LayoutParams params; LinearLayout root, content, bodyWrapper; boolean collapsed=false;\n    public IBinder onBind(Intent i) { return null; }\n    public void onCreate() {\n        super.onCreate();\n        String chId="bryant";\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { NotificationChannel ch=new NotificationChannel(chId,"Bryantfornitestuff",NotificationManager.IMPORTANCE_LOW); ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch); }\n        Notification n=(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? new Notification.Builder(this,chId).setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build() : new Notification.Builder(this).setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build();\n        startForeground(1,n);\n        wm=(WindowManager)getSystemService(WINDOW_SERVICE);\n        root=buildRoot();\n        params=new WindowManager.LayoutParams(dp(300),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT);\n        params.gravity=Gravity.TOP|Gravity.START; params.x=dp(20); params.y=dp(60);\n        wm.addView(root,params);\n        renderTab("Combat");\n    }\n    LinearLayout buildRoot() {\n        LinearLayout r=new LinearLayout(this); r.setOrientation(LinearLayout.VERTICAL); r.setBackground(rounded("#CC0A0A0A",12)); r.setPadding(dp(10),dp(10),dp(10),dp(10));\n        LinearLayout titleRow=new LinearLayout(this); titleRow.setOrientation(LinearLayout.HORIZONTAL); titleRow.setPadding(dp(6),dp(4),dp(6),dp(8));\n        TextView title=new TextView(this); title.setText("BRYANTFORNITESTUFF"); title.setTextColor(Color.parseColor("#00FF9C")); title.setTextSize(15); title.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); titleRow.addView(title);\n        TextView col=new TextView(this); col.setText("_"); col.setTextColor(Color.parseColor("#00FF9C")); col.setTextSize(22); col.setPadding(dp(8),0,dp(8),0); col.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ collapsed=!collapsed; bodyWrapper.setVisibility(collapsed?View.GONE:View.VISIBLE);} }); titleRow.addView(col);\n        titleRow.setOnTouchListener(new View.OnTouchListener(){ float sx,sy; int px,py; public boolean onTouch(View v,MotionEvent e){ switch(e.getAction()){ case MotionEvent.ACTION_DOWN: sx=e.getRawX(); sy=e.getRawY(); px=params.x; py=params.y; return true; case MotionEvent.ACTION_MOVE: params.x=px+(int)(e.getRawX()-sx); params.y=py+(int)(e.getRawY()-sy); wm.updateViewLayout(root,params); return true;} return false;} });\n        r.addView(titleRow);\n        bodyWrapper=new LinearLayout(this); bodyWrapper.setOrientation(LinearLayout.VERTICAL);\n        LinearLayout tabs=new LinearLayout(this); tabs.setOrientation(LinearLayout.HORIZONTAL);\n        String[] tn={"Combat","Player","Visuals","Skins","Settings"};\n        for (final String t:tn){ TextView tv=new TextView(this); tv.setText(t); tv.setTextColor(Color.parseColor("#00FF9C")); tv.setTextSize(11); tv.setPadding(dp(8),dp(6),dp(8),dp(6)); tv.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){ renderTab(t);} }); tabs.addView(tv);}\n        bodyWrapper.addView(tabs);\n        content=new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL); content.setPadding(dp(6),dp(8),dp(6),dp(6)); bodyWrapper.addView(content);\n        r.addView(bodyWrapper);\n        return r;\n    }\n    void renderTab(String tab){\n        content.removeAllViews();\n        if (tab.equals("Combat")){\n            addToggle("Aimbot",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setAimbot(v);} });\n            addToggle("Silent Aim",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setSilent(v);} });\n            addToggle("Rage Mode",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setRage(v);} });\n            addSlider("Aim Speed",1,20,new IntConsumer(){ public void accept(int v){ Native.setAimSpeed(v);} });\n            addSlider("FOV",1,360,new IntConsumer(){ public void accept(int v){ Native.setFov(v);} });\n        } else if (tab.equals("Player")){\n            addToggle("Infinite Health",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setInfHealth(v);} });\n            addToggle("Speed Boost",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setSpeed(v);} });\n            addSlider("Speed Mult",1,10,new IntConsumer(){ public void accept(int v){ Native.setSpeedMult(v);} });\n            addToggle("Flight",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setFlight(v);} });\n            addToggle("Noclip",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setNoclip(v);} });\n        } else if (tab.equals("Visuals")){\n            addToggle("ESP",new Consumer<Boolean>(){ public void accept(Boolean v){ Native.setEsp(v);} });\n        } else if (tab.equals("Skins")){\n            addButton("Unlock All Skins",new View.OnClickListener(){ public void onClick(View v){ Native.setAllSkins(true);} });\n        } else if (tab.equals("Settings")){\n            addButton("Exit",new View.OnClickListener(){ public void onClick(View v){ stopSelf();} });\n        }\n    }\n    void addToggle(String label,final Consumer<Boolean> cb){\n        LinearLayout row=new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setPadding(0,dp(4),0,dp(4));\n        TextView tv=new TextView(this); tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13); tv.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f)); row.addView(tv);\n        Switch s=new Switch(this); s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){ public void onCheckedChanged(CompoundButton b,boolean v){ cb.accept(v);} }); row.addView(s);\n        content.addView(row);\n    }\n    void addSlider(String label,final int min,int max,final IntConsumer cb){\n        LinearLayout col=new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(0,dp(4),0,dp(4));\n        final TextView tv=new TextView(this); tv.setText(label+": "+min); tv.setTextColor(Color.WHITE); tv.setTextSize(13); col.addView(tv);\n        SeekBar sb=new SeekBar(this); sb.setMax(max-min); sb.setProgress(0);\n        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){ public void onProgressChanged(SeekBar s,int p,boolean u){ int v=p+min; tv.setText(label+": "+v); cb.accept(v);} public void onStartTrackingTouch(SeekBar s){} public void onStopTrackingTouch(SeekBar s){} });\n        col.addView(sb); content.addView(col);\n    }\n    void addButton(String label,View.OnClickListener l){\n        Button b=new Button(this); b.setText(label); b.setTextColor(Color.parseColor("#00FF9C")); b.setBackground(rounded("#1A1A1A",6)); b.setOnClickListener(l); content.addView(b);\n    }\n    GradientDrawable rounded(String c,int r){ GradientDrawable d=new GradientDrawable(); d.setColor(Color.parseColor(c)); d.setCornerRadius(dp(r)); return d; }\n    int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density); }\n    public void onDestroy(){ super.onDestroy(); if (root!=null) wm.removeView(root); stopForeground(true); }\n}\n' > app/src/main/java/com/bryant/bryantfornitestuff/OverlayService.java
+          echo 'pluginManagement {' > settings.gradle
+          echo '  repositories { google(); mavenCentral(); gradlePluginPortal() }' >> settings.gradle
+          echo '}' >> settings.gradle
+          echo 'dependencyResolutionManagement {' >> settings.gradle
+          echo '  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)' >> settings.gradle
+          echo '  repositories { google(); mavenCentral() }' >> settings.gradle
+          echo '}' >> settings.gradle
+          echo 'rootProject.name = "Bryantfornitestuff"' >> settings.gradle
+          echo 'include ":app"' >> settings.gradle
+
+      - name: build.gradle
+        run: |
+          echo 'plugins {' > build.gradle
+          echo '  id "com.android.application" version "8.1.4" apply false' >> build.gradle
+          echo '}' >> build.gradle
+
+      - name: gradle.properties
+        run: |
+          echo 'android.useAndroidX=true' > gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+
+      - name: app/build.gradle
+        run: |
+          mkdir -p app
+          echo 'plugins { id "com.android.application" }' > app/build.gradle
+          echo 'android {' >> app/build.gradle
+          echo '  namespace "com.bryant.bryantfornitestuff"' >> app/build.gradle
+          echo '  compileSdk 33' >> app/build.gradle
+          echo '  defaultConfig {' >> app/build.gradle
+          echo '    applicationId "com.bryant.bryantfornitestuff"' >> app/build.gradle
+          echo '    minSdk 26' >> app/build.gradle
+          echo '    targetSdk 33' >> app/build.gradle
+          echo '    versionCode 1' >> app/build.gradle
+          echo '    versionName "1.0"' >> app/build.gradle
+          echo '  }' >> app/build.gradle
+          echo '  compileOptions {' >> app/build.gradle
+          echo '    sourceCompatibility JavaVersion.VERSION_17' >> app/build.gradle
+          echo '    targetCompatibility JavaVersion.VERSION_17' >> app/build.gradle
+          echo '  }' >> app/build.gradle
+          echo '}' >> app/build.gradle
+          echo 'dependencies { implementation "androidx.appcompat:appcompat:1.6.1" }' >> app/build.gradle
+
+      - name: AndroidManifest.xml
+        run: |
+          mkdir -p app/src/main
+          echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/AndroidManifest.xml
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' >> app/src/main/AndroidManifest.xml
+          echo '  <application android:label="Bryantfornitestuff" android:theme="@style/Theme.AppCompat.NoActionBar">' >> app/src/main/AndroidManifest.xml
+          echo '    <activity android:name=".MainActivity" android:exported="true">' >> app/src/main/AndroidManifest.xml
+          echo '      <intent-filter>' >> app/src/main/AndroidManifest.xml
+          echo '        <action android:name="android.intent.action.MAIN"/>' >> app/src/main/AndroidManifest.xml
+          echo '        <category android:name="android.intent.category.LAUNCHER"/>' >> app/src/main/AndroidManifest.xml
+          echo '      </intent-filter>' >> app/src/main/AndroidManifest.xml
+          echo '    </activity>' >> app/src/main/AndroidManifest.xml
+          echo '    <service android:name=".OverlayService" android:exported="false"/>' >> app/src/main/AndroidManifest.xml
+          echo '  </application>' >> app/src/main/AndroidManifest.xml
+          echo '</manifest>' >> app/src/main/AndroidManifest.xml
+
+      - name: Native.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          mkdir -p $D
+          echo 'package com.bryant.bryantfornitestuff;' > $D/Native.java
+          echo 'import android.util.Log;' >> $D/Native.java
+          echo 'public class Native {' >> $D/Native.java
+          echo '  public static void init(){ Log.i("B","init"); }' >> $D/Native.java
+          echo '  public static void setAimbot(boolean v){ Log.i("B","aim="+v); }' >> $D/Native.java
+          echo '  public static void setSilent(boolean v){ Log.i("B","sil="+v); }' >> $D/Native.java
+          echo '  public static void setRage(boolean v){ Log.i("B","r="+v); }' >> $D/Native.java
+          echo '  public static void setInfHealth(boolean v){}' >> $D/Native.java
+          echo '  public static void setSpeed(boolean v){}' >> $D/Native.java
+          echo '  public static void setFlight(boolean v){}' >> $D/Native.java
+          echo '  public static void setNoclip(boolean v){}' >> $D/Native.java
+          echo '  public static void setAllSkins(boolean v){}' >> $D/Native.java
+          echo '  public static void setEsp(boolean v){}' >> $D/Native.java
+          echo '  public static void setAimSpeed(int v){}' >> $D/Native.java
+          echo '  public static void setFov(int v){}' >> $D/Native.java
+          echo '  public static void setSpeedMult(int v){}' >> $D/Native.java
+          echo '}' >> $D/Native.java
+
+      - name: MainActivity.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          echo 'package com.bryant.bryantfornitestuff;' > $D/MainActivity.java
+          echo 'import android.content.Intent;' >> $D/MainActivity.java
+          echo 'import android.net.Uri;' >> $D/MainActivity.java
+          echo 'import android.os.Bundle;' >> $D/MainActivity.java
+          echo 'import android.provider.Settings;' >> $D/MainActivity.java
+          echo 'import androidx.appcompat.app.AppCompatActivity;' >> $D/MainActivity.java
+          echo 'public class MainActivity extends AppCompatActivity {' >> $D/MainActivity.java
+          echo '  protected void onCreate(Bundle b){' >> $D/MainActivity.java
+          echo '    super.onCreate(b);' >> $D/MainActivity.java
+          echo '    if (!Settings.canDrawOverlays(this)) {' >> $D/MainActivity.java
+          echo '      startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())));' >> $D/MainActivity.java
+          echo '    } else {' >> $D/MainActivity.java
+          echo '      startService(new Intent(this, OverlayService.class));' >> $D/MainActivity.java
+          echo '      finish();' >> $D/MainActivity.java
+          echo '    }' >> $D/MainActivity.java
+          echo '  }' >> $D/MainActivity.java
+          echo '}' >> $D/MainActivity.java
+
+      - name: OverlayService.java
+        run: |
+          D=app/src/main/java/com/bryant/bryantfornitestuff
+          echo 'package com.bryant.bryantfornitestuff;' > $D/OverlayService.java
+          echo 'import android.app.*;' >> $D/OverlayService.java
+          echo 'import android.content.Intent;' >> $D/OverlayService.java
+          echo 'import android.graphics.*;' >> $D/OverlayService.java
+          echo 'import android.graphics.drawable.GradientDrawable;' >> $D/OverlayService.java
+          echo 'import android.os.*;' >> $D/OverlayService.java
+          echo 'import android.view.*;' >> $D/OverlayService.java
+          echo 'import android.widget.*;' >> $D/OverlayService.java
+          echo 'public class OverlayService extends Service {' >> $D/OverlayService.java
+          echo '  WindowManager wm;' >> $D/OverlayService.java
+          echo '  WindowManager.LayoutParams params;' >> $D/OverlayService.java
+          echo '  LinearLayout root, content;' >> $D/OverlayService.java
+          echo '  public IBinder onBind(Intent i){ return null; }' >> $D/OverlayService.java
+          echo '  public void onCreate(){' >> $D/OverlayService.java
+          echo '    super.onCreate();' >> $D/OverlayService.java
+          echo '    if (Build.VERSION.SDK_INT >= 26){' >> $D/OverlayService.java
+          echo '      NotificationChannel ch = new NotificationChannel("b","Bryantfornitestuff",NotificationManager.IMPORTANCE_LOW);' >> $D/OverlayService.java
+          echo '      ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);' >> $D/OverlayService.java
+          echo '      startForeground(1,new Notification.Builder(this,"b").setContentTitle("Bryantfornitestuff").setSmallIcon(android.R.drawable.ic_menu_info_details).build());' >> $D/OverlayService.java
+          echo '    }' >> $D/OverlayService.java
+          echo '    wm=(WindowManager)getSystemService(WINDOW_SERVICE);' >> $D/OverlayService.java
+          echo '    root=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    root.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    GradientDrawable gd=new GradientDrawable();' >> $D/OverlayService.java
+          echo '    gd.setColor(Color.parseColor("#CC0A0A0A"));' >> $D/OverlayService.java
+          echo '    gd.setCornerRadius(dp(12));' >> $D/OverlayService.java
+          echo '    root.setBackground(gd);' >> $D/OverlayService.java
+          echo '    root.setPadding(dp(12),dp(12),dp(12),dp(12));' >> $D/OverlayService.java
+          echo '    TextView t=new TextView(this);' >> $D/OverlayService.java
+          echo '    t.setText("BRYANTFORNITESTUFF");' >> $D/OverlayService.java
+          echo '    t.setTextColor(Color.parseColor("#00FF9C"));' >> $D/OverlayService.java
+          echo '    t.setTextSize(16);' >> $D/OverlayService.java
+          echo '    root.addView(t);' >> $D/OverlayService.java
+          echo '    content=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    content.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    root.addView(content);' >> $D/OverlayService.java
+          echo '    addT("Aimbot",0);' >> $D/OverlayService.java
+          echo '    addT("Silent Aim",1);' >> $D/OverlayService.java
+          echo '    addT("Rage Mode",2);' >> $D/OverlayService.java
+          echo '    addT("Infinite Health",3);' >> $D/OverlayService.java
+          echo '    addT("Speed Boost",4);' >> $D/OverlayService.java
+          echo '    addT("Flight",5);' >> $D/OverlayService.java
+          echo '    addT("Noclip",6);' >> $D/OverlayService.java
+          echo '    addT("All Skins",7);' >> $D/OverlayService.java
+          echo '    addT("ESP",8);' >> $D/OverlayService.java
+          echo '    params=new WindowManager.LayoutParams(dp(300),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT);' >> $D/OverlayService.java
+          echo '    params.gravity=Gravity.TOP|Gravity.START;' >> $D/OverlayService.java
+          echo '    params.x=dp(20); params.y=dp(60);' >> $D/OverlayService.java
+          echo '    wm.addView(root,params);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void addT(String label,final int id){' >> $D/OverlayService.java
+          echo '    LinearLayout row=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    row.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    row.setPadding(0,dp(4),0,dp(4));' >> $D/OverlayService.java
+          echo '    TextView tv=new TextView(this);' >> $D/OverlayService.java
+          echo '    tv.setText(label);' >> $D/OverlayService.java
+          echo '    tv.setTextColor(Color.WHITE);' >> $D/OverlayService.java
+          echo '    tv.setTextSize(14);' >> $D/OverlayService.java
+          echo '    tv.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));' >> $D/OverlayService.java
+          echo '    row.addView(tv);' >> $D/OverlayService.java
+          echo '    Switch s=new Switch(this);' >> $D/OverlayService.java
+          echo '    s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){' >> $D/OverlayService.java
+          echo '      public void onCheckedChanged(CompoundButton b,boolean v){ setF(id,v); }' >> $D/OverlayService.java
+          echo '    });' >> $D/OverlayService.java
+          echo '    row.addView(s);' >> $D/OverlayService.java
+          echo '    content.addView(row);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void setF(int id,boolean v){' >> $D/OverlayService.java
+          echo '    if (id==0) Native.setAimbot(v);' >> $D/OverlayService.java
+          echo '    else if (id==1) Native.setSilent(v);' >> $D/OverlayService.java
+          echo '    else if (id==2) Native.setRage(v);' >> $D/OverlayService.java
+          echo '    else if (id==3) Native.setInfHealth(v);' >> $D/OverlayService.java
+          echo '    else if (id==4) Native.setSpeed(v);' >> $D/OverlayService.java
+          echo '    else if (id==5) Native.setFlight(v);' >> $D/OverlayService.java
+          echo '    else if (id==6) Native.setNoclip(v);' >> $D/OverlayService.java
+          echo '    else if (id==7) Native.setAllSkins(v);' >> $D/OverlayService.java
+          echo '    else if (id==8) Native.setEsp(v);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density); }' >> $D/OverlayService.java
+          echo '  public void onDestroy(){ super.onDestroy(); if (root!=null) wm.removeView(root); stopForeground(true); }' >> $D/OverlayService.java
+          echo '}' >> $D/OverlayService.java
+
       - name: Build APK
         run: gradle assembleRelease
+
       - uses: actions/upload-artifact@v4
         with:
           name: Bryantfornitestuff-apk
-          path: app/build/outputs/apk/release/app-release.apk(8), 0, dp(8), 0);
-                  collapse.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { toggleCollapse(); }
-                  });
-                  titleRow.addView(collapse);
-
-                  titleRow.setOnTouchListener(new View.OnTouchListener() {
-                      float sx, sy; int px, py;
-                      public boolean onTouch(View v, MotionEvent e) {
-                          switch (e.getAction()) {
-                              case MotionEvent.ACTION_DOWN:
-                                  sx = e.getRawX(); sy = e.getRawY();
-                                  px = params.x; py = params.y; return true;
-                              case MotionEvent.ACTION_MOVE:
-                                  params.x = px + (int)(e.getRawX() - sx);
-                                  params.y = py + (int)(e.getRawY() - sy);
-                                  wm.updateViewLayout(root, params); return true;
-                          }
-                          return false;
-                      }
-                  });
-                  r.addView(titleRow);
-
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  String[] tabNames = {"Combat","Player","Visuals","Skins","Settings"};
-                  for (String t : tabNames) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-
-              private View makeTab(final String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { renderTab(name); }
-                  });
-                  return tv;
-              }
-
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  if (tab.equals("Combat")) {
-                      addToggle("Aimbot", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setAimbot(v); } });
-                      addToggle("Silent Aim", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSilent(v); } });
-                      addToggle("Rage Mode", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setRage(v); } });
-                      addSlider("Aim Speed", 1, 20, new IntConsumer() { public void accept(int v) { Native.setAimSpeed(v); } });
-                      addSlider("FOV", 1, 360, new IntConsumer() { public void accept(int v) { Native.setFov(v); } });
-                  } else if (tab.equals("Player")) {
-                      addToggle("Infinite Health", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setInfHealth(v); } });
-                      addToggle("Speed Boost", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSpeed(v); } });
-                      addSlider("Speed Mult", 1, 10, new IntConsumer() { public void accept(int v) { Native.setSpeedMult(v); } });
-                      addToggle("Flight", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setFlight(v); } });
-                      addToggle("Noclip", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setNoclip(v); } });
-                  } else if (tab.equals("Visuals")) {
-                      addToggle("ESP", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setEsp(v); } });
-                  } else if (tab.equals("Skins")) {
-                      addButton("Unlock All Skins", new View.OnClickListener() { public void onClick(View v) { Native.setAllSkins(true); } });
-                  } else if (tab.equals("Settings")) {
-                      addButton("Exit", new View.OnClickListener() { public void onClick(View v) { stopSelf(); } });
-                  }
-              }
-
-              private void addToggle(String label, final Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                      public void onCheckedChanged(CompoundButton b, boolean v) { cb.accept(v); }
-                  });
-                  row.addView(s);
-                  content.addView(row);
-              }
-
-              private void addSlider(String label, final int min, int max, final IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  final TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min);
-                  sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min;
-                          tv.setText(label + ": " + v);
-                          cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-
-              private int dp(int v) {
-                  return (int)(v * getResources().getDisplayMetrics().density);
-              }
-
-              @Override
-              public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-          echo "Generated."
-      - name: Build APK
-        run: cd BryantFN && gradle assembleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Bryantfornitestuff-apk
-          path: BryantFN/app/build/outputs/apk/release/app-release.apk(8), 0, dp(8), 0);
-                  collapse.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { toggleCollapse(); }
-                  });
-                  titleRow.addView(collapse);
-
-                  titleRow.setOnTouchListener(new View.OnTouchListener() {
-                      float sx, sy; int px, py;
-                      public boolean onTouch(View v, MotionEvent e) {
-                          switch (e.getAction()) {
-                              case MotionEvent.ACTION_DOWN:
-                                  sx = e.getRawX(); sy = e.getRawY();
-                                  px = params.x; py = params.y; return true;
-                              case MotionEvent.ACTION_MOVE:
-                                  params.x = px + (int)(e.getRawX() - sx);
-                                  params.y = py + (int)(e.getRawY() - sy);
-                                  wm.updateViewLayout(root, params); return true;
-                          }
-                          return false;
-                      }
-                  });
-                  r.addView(titleRow);
-
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  String[] tabNames = {"Combat","Player","Visuals","Skins","Settings"};
-                  for (String t : tabNames) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-
-              private View makeTab(final String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { renderTab(name); }
-                  });
-                  return tv;
-              }
-
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  if (tab.equals("Combat")) {
-                      addToggle("Aimbot", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setAimbot(v); } });
-                      addToggle("Silent Aim", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSilent(v); } });
-                      addToggle("Rage Mode", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setRage(v); } });
-                      addSlider("Aim Speed", 1, 20, new IntConsumer() { public void accept(int v) { Native.setAimSpeed(v); } });
-                      addSlider("FOV", 1, 360, new IntConsumer() { public void accept(int v) { Native.setFov(v); } });
-                  } else if (tab.equals("Player")) {
-                      addToggle("Infinite Health", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setInfHealth(v); } });
-                      addToggle("Speed Boost", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSpeed(v); } });
-                      addSlider("Speed Mult", 1, 10, new IntConsumer() { public void accept(int v) { Native.setSpeedMult(v); } });
-                      addToggle("Flight", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setFlight(v); } });
-                      addToggle("Noclip", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setNoclip(v); } });
-                  } else if (tab.equals("Visuals")) {
-                      addToggle("ESP", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setEsp(v); } });
-                  } else if (tab.equals("Skins")) {
-                      addButton("Unlock All Skins", new View.OnClickListener() { public void onClick(View v) { Native.setAllSkins(true); } });
-                  } else if (tab.equals("Settings")) {
-                      addButton("Exit", new View.OnClickListener() { public void onClick(View v) { stopSelf(); } });
-                  }
-              }
-
-              private void addToggle(String label, final Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                      public void onCheckedChanged(CompoundButton b, boolean v) { cb.accept(v); }
-                  });
-                  row.addView(s);
-                  content.addView(row);
-              }
-
-              private void addSlider(String label, final int min, int max, final IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  final TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min);
-                  sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min;
-                          tv.setText(label + ": " + v);
-                          cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-
-              private int dp(int v) {
-                  return (int)(v * getResources().getDisplayMetrics().density);
-              }
-
-              @Override
-              public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-          echo "Generated."
-      - name: Build APK
-        run: cd BryantFN && gradle assembleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Bryantfornitestuff-apk
-          path: BryantFN/app/build/outputs/apk/release/app-release.apketPadding(dp(6), dp(4), dp(6), dp(8));
-
-                  TextView title = new TextView(this);
-                  title.setText("BRYANTFORNITESTUFF");
-                  title.setTextColor(Color.parseColor("#00FF9C"));
-                  title.setTextSize(15);
-                  title.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  titleRow.addView(title);
-
-                  TextView collapse = new TextView(this);
-                  collapse.setText("_");
-                  collapse.setTextColor(Color.parseColor("#00FF9C"));
-                  collapse.setTextSize(22);
-                  collapse.setPadding(dp(8), 0, dp(8), 0);
-                  collapse.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { toggleCollapse(); }
-                  });
-                  titleRow.addView(collapse);
-
-                  titleRow.setOnTouchListener(new View.OnTouchListener() {
-                      float sx, sy; int px, py;
-                      public boolean onTouch(View v, MotionEvent e) {
-                          switch (e.getAction()) {
-                              case MotionEvent.ACTION_DOWN:
-                                  sx = e.getRawX(); sy = e.getRawY();
-                                  px = params.x; py = params.y; return true;
-                              case MotionEvent.ACTION_MOVE:
-                                  params.x = px + (int)(e.getRawX() - sx);
-                                  params.y = py + (int)(e.getRawY() - sy);
-                                  wm.updateViewLayout(root, params); return true;
-                          }
-                          return false;
-                      }
-                  });
-                  r.addView(titleRow);
-
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  String[] tabNames = {"Combat","Player","Visuals","Skins","Settings"};
-                  for (String t : tabNames) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-
-              private View makeTab(final String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) { renderTab(name); }
-                  });
-                  return tv;
-              }
-
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  if (tab.equals("Combat")) {
-                      addToggle("Aimbot", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setAimbot(v); } });
-                      addToggle("Silent Aim", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSilent(v); } });
-                      addToggle("Rage Mode", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setRage(v); } });
-                      addSlider("Aim Speed", 1, 20, new IntConsumer() { public void accept(int v) { Native.setAimSpeed(v); } });
-                      addSlider("FOV", 1, 360, new IntConsumer() { public void accept(int v) { Native.setFov(v); } });
-                  } else if (tab.equals("Player")) {
-                      addToggle("Infinite Health", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setInfHealth(v); } });
-                      addToggle("Speed Boost", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setSpeed(v); } });
-                      addSlider("Speed Mult", 1, 10, new IntConsumer() { public void accept(int v) { Native.setSpeedMult(v); } });
-                      addToggle("Flight", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setFlight(v); } });
-                      addToggle("Noclip", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setNoclip(v); } });
-                  } else if (tab.equals("Visuals")) {
-                      addToggle("ESP", new Consumer<Boolean>() { public void accept(Boolean v) { Native.setEsp(v); } });
-                  } else if (tab.equals("Skins")) {
-                      addButton("Unlock All Skins", new View.OnClickListener() { public void onClick(View v) { Native.setAllSkins(true); } });
-                  } else if (tab.equals("Settings")) {
-                      addButton("Exit", new View.OnClickListener() { public void onClick(View v) { stopSelf(); } });
-                  }
-              }
-
-              private void addToggle(String label, final Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
-                      public void onCheckedChanged(android.widget.CompoundButton b, boolean v) { cb.accept(v); }
-                  });
-                  row.addView(s);
-                  content.addView(row);
-              }
-
-              private void addSlider(String label, final int min, int max, final IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  final TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min);
-                  tv.setTextColor(Color.WHITE);
-                  tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min);
-                  sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min;
-                          tv.setText(label + ": " + v);
-                          cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-
-              private int dp(int v) {
-                  return (int)(v * getResources().getDisplayMetrics().density);
-              }
-
-              @Override
-              public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
-          cmake_minimum_required(VERSION 3.18)
-          project(bryantfornitestuff LANGUAGES CXX)
-          add_library(bryantfornitestuff SHARED axion.cpp)
-          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
-          target_link_libraries(bryantfornitestuff log android)
-          XEOF
-          cat > app/src/main/cpp/axion.cpp <<'XEOF'
-          #include <jni.h>
-          #include <cstdint>
-          #include <cstring>
-          #include <cstdio>
-          #include <cstdlib>
-          #include <unistd.h>
-          #include <fcntl.h>
-          #include <thread>
-          #include <atomic>
-          #include <fstream>
-          #include <map>
-          #include <string>
-          #include <sys/ptrace.h>
-          #include <sys/wait.h>
-          #include <android/log.h>
-
-          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
-
-          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
-          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
-          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
-          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
-
-          static pid_t g_pid = -1;
-          static int g_memfd = -1;
-          static uintptr_t g_base = 0;
-          static std::map<std::string, uintptr_t> OFF;
-
-          static void load_offsets() {
-           y; return true;
-                              case MotionEvent.ACTION_MOVE:
-                                  params.x = px + (int)(e.getRawX() - sx);
-                                  params.y = py + (int)(e.getRawY() - sy);
-                                  wm.updateViewLayout(root, params); return true;
-                          }
-                          return false;
-                      }
-                  });
-                  r.addView(titleRow);
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  for (String t : new String[]{"Combat","Player","Visuals","Skins","Settings"}) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-              private View makeTab(String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(v -> renderTab(name));
-                  return tv;
-              }
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  switch (tab) {
-                      case "Combat":
-                          addToggle("Aimbot", Native::setAimbot);
-                          addToggle("Silent Aim", Native::setSilent);
-                          addToggle("Rage Mode", Native::setRage);
-                          addSlider("Aim Speed", 1, 20, Native::setAimSpeed);
-                          addSlider("FOV", 1, 360, Native::setFov);
-                          break;
-                      case "Player":
-                          addToggle("Infinite Health", Native::setInfHealth);
-                          addToggle("Speed Boost", Native::setSpeed);
-                          addSlider("Speed Mult", 1, 10, Native::setSpeedMult);
-                          addToggle("Flight", Native::setFlight);
-                          addToggle("Noclip", Native::setNoclip);
-                          break;
-                      case "Visuals":
-                          addToggle("ESP", Native::setEsp);
-                          addToggle("Wallhack", v -> {});
-                          addToggle("Radar", v -> {});
-                          addToggle("Full Bright", v -> {});
-                          break;
-                      case "Skins":
-                          addButton("Unlock All Skins", v -> Native.setAllSkins(true));
-                          break;
-                      case "Settings":
-                          addButton("Hide Root", v -> {
-                              try {
-                                  Runtime.getRuntime().exec("su -c 'magisk --denylist add com.epicgames.fortnite'");
-                                  Runtime.getRuntime().exec("su -c 'setenforce 0'");
-                              } catch (Exception ignored) {}
-                          });
-                          addButton("Exit", v -> stopSelf());
-                          break;
-                  }
-              }
-              private void addToggle(String label, java.util.function.Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener((b, v) -> cb.accept(v));
-                  row.addView(s);
-                  content.addView(row);
-              }
-              private void addSlider(String label, int min, int max, java.util.function.IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min); sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min; tv.setText(label + ": " + v); cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-              private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
-              @Override public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
-          cmake_minimum_required(VERSION 3.18)
-          project(bryantfornitestuff LANGUAGES CXX)
-          add_library(bryantfornitestuff SHARED axion.cpp)
-          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
-          target_link_libraries(bryantfornitestuff log android)
-          XEOF
-          cat > app/src/main/cpp/axion.cpp <<'XEOF'
-          #include <jni.h>
-          #include <cstdint>
-          #include <cstring>
-          #include <cstdlib>
-          #include <unistd.h>
-          #include <fcntl.h>
-          #include <thread>
-          #include <atomic>
-          #include <fstream>
-          #include <map>
-          #include <string>
-          #include <sys/ptrace.h>
-          #include <sys/wait.h>
-          #include <android/log.h>
-          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
-          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
-          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
-          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
-          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
-          static pid_t g_pid = -1;
-          static int g_memfd = -1;
-          static uintptr_t g_base = 0;
-          static std::map<std::string, uintptr_t> OFF;
-          static void load_offsets() {
-              const char* paths[] = {"/sdcard/Bryantfornitestuff/offsets.txt", "/data/local/tmp/offsets.txt"};
-              for (const char* p : paths) {
-                  std::ifstream f(p);
-                  if (!f.is_open()) continue;
-                  std::string line;
-                  while (std::getline(f, line)) {
-                      if (line.empty() || line[0] == '#') continue;
-                      auto eq = line.find('=');
-                      if (eq == std::string::npos) continue;
-                      OFF[line.substr(0, eq)] = strtoull(line.substr(eq + 1).c_str(), nullptr, 16);
-                  }
-                  LOG("Loaded %zu offsets", OFF.size());
-                  return;
-              }
-          }
-          static pid_t find_pid() {
-              FILE* f = popen("pidof com.epicgames.fortnite", "r");
-              if (!f) return -1;
-              char buf[32] = {0}; fgets(buf, 32, f); pclose(f);
-              return atoi(buf);
-          }
-          static int open_mem(pid_t pid) {
-              char p[64]; snprintf(p, 64, "/proc/%d/mem", pid);
-              return open(p, O_RDWR);
-          }
-          static void aim_thread() { while (aimbot || silent || rage) usleep(1000); }
-          static void player_thread() { while (infHealth || speed || flight || noclip || allSkins || esp) usleep(2000); }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_init(JNIEnv*, jclass) {
-              load_offsets();
-              g_pid = find_pid();
-              if (g_pid <= 0) { LOG("FN not running"); return; }
-              g_memfd = open_mem(g_pid);
-              if (g_memfd < 0) { LOG("mem fail"); return; }
-              ptrace(PTRACE_ATTACH, g_pid, nullptr, nullptr);
-              waitpid(g_pid, nullptr, 0);
-              std::thread(aim_thread).detach();
-              std::thread(player_thread).detach();
-          }
-          extern "C"       params.x = px + (int)(e.getRawX() - sx);
-                                  params.y = py + (int)(e.getRawY() - sy);
-                                  wm.updateViewLayout(root, params); return true;
-                          }
-                          return false;
-                      }
-                  });
-                  r.addView(titleRow);
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  for (String t : new String[]{"Combat","Player","Visuals","Skins","Settings"}) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-              private View makeTab(String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(v -> renderTab(name));
-                  return tv;
-              }
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  switch (tab) {
-                      case "Combat":
-                          addToggle("Aimbot", Native::setAimbot);
-                          addToggle("Silent Aim", Native::setSilent);
-                          addToggle("Rage Mode", Native::setRage);
-                          addSlider("Aim Speed", 1, 20, Native::setAimSpeed);
-                          addSlider("FOV", 1, 360, Native::setFov);
-                          break;
-                      case "Player":
-                          addToggle("Infinite Health", Native::setInfHealth);
-                          addToggle("Speed Boost", Native::setSpeed);
-                          addSlider("Speed Mult", 1, 10, Native::setSpeedMult);
-                          addToggle("Flight", Native::setFlight);
-                          addToggle("Noclip", Native::setNoclip);
-                          break;
-                      case "Visuals":
-                          addToggle("ESP", Native::setEsp);
-                          addToggle("Wallhack", v -> {});
-                          addToggle("Radar", v -> {});
-                          addToggle("Full Bright", v -> {});
-                          break;
-                      case "Skins":
-                          addButton("Unlock All Skins", v -> Native.setAllSkins(true));
-                          break;
-                      case "Settings":
-                          addButton("Hide Root", v -> {
-                              try {
-                                  Runtime.getRuntime().exec("su -c 'magisk --denylist add com.epicgames.fortnite'");
-                                  Runtime.getRuntime().exec("su -c 'setenforce 0'");
-                              } catch (Exception ignored) {}
-                          });
-                          addButton("Exit", v -> stopSelf());
-                          break;
-                  }
-              }
-              private void addToggle(String label, java.util.function.Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener((b, v) -> cb.accept(v));
-                  row.addView(s);
-                  content.addView(row);
-              }
-              private void addSlider(String label, int min, int max, java.util.function.IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min); sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min; tv.setText(label + ": " + v); cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-              private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
-              @Override public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
-          cmake_minimum_required(VERSION 3.18)
-          project(bryantfornitestuff LANGUAGES CXX)
-          add_library(bryantfornitestuff SHARED axion.cpp)
-          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
-          target_link_libraries(bryantfornitestuff log android)
-          XEOF
-          cat > app/src/main/cpp/axion.cpp <<'XEOF'
-          #include <jni.h>
-          #include <cstdint>
-          #include <cstring>
-          #include <cstdlib>
-          #include <unistd.h>
-          #include <fcntl.h>
-          #include <thread>
-          #include <atomic>
-          #include <fstream>
-          #include <map>
-          #include <string>
-          #include <sys/ptrace.h>
-          #include <sys/wait.h>
-          #include <android/log.h>
-          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
-          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
-          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
-          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
-          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
-          static pid_t g_pid = -1;
-          static int g_memfd = -1;
-          static uintptr_t g_base = 0;
-          static std::map<std::string, uintptr_t> OFF;
-          static void load_offsets() {
-              const char* paths[] = {"/sdcard/Bryantfornitestuff/offsets.txt", "/data/local/tmp/offsets.txt"};
-              for (const char* p : paths) {
-                  std::ifstream f(p);
-                  if (!f.is_open()) continue;
-                  std::string line;
-                  while (std::getline(f, line)) {
-                      if (line.empty() || line[0] == '#') continue;
-                      auto eq = line.find('=');
-                      if (eq == std::string::npos) continue;
-                      OFF[line.substr(0, eq)] = strtoull(line.substr(eq + 1).c_str(), nullptr, 16);
-                  }
-                  LOG("Loaded %zu offsets", OFF.size());
-                  return;
-              }
-          }
-          static pid_t find_pid() {
-              FILE* f = popen("pidof com.epicgames.fortnite", "r");
-              if (!f) return -1;
-              char buf[32] = {0}; fgets(buf, 32, f); pclose(f);
-              return atoi(buf);
-          }
-          static int open_mem(pid_t pid) {
-              char p[64]; snprintf(p, 64, "/proc/%d/mem", pid);
-              return open(p, O_RDWR);
-          }
-          static void aim_thread() { while (aimbot || silent || rage) usleep(1000); }
-          static void player_thread() { while (infHealth || speed || flight || noclip || allSkins || esp) usleep(2000); }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_init(JNIEnv*, jclass) {
-              load_offsets();
-              g_pid = find_pid();
-              if (g_pid <= 0) { LOG("FN not running"); return; }
-              g_memfd = open_mem(g_pid);
-              if (g_memfd < 0) { LOG("mem fail"); return; }
-              ptrace(PTRACE_ATTACH, g_pid, nullptr, nullptr);
-              waitpid(g_pid, nullptr, 0);
-              std::thread(aim_thread).detach();
-              std::thread(player_thread).detach();
-          }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setAimbot(JNIEnv*, jclass, jboolean v                       return false;
-                      }
-                  });
-                  r.addView(titleRow);
-                  bodyWrapper = new LinearLayout(this);
-                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
-                  LinearLayout tabs = new LinearLayout(this);
-                  tabs.setOrientation(LinearLayout.HORIZONTAL);
-                  for (String t : new String[]{"Combat","Player","Visuals","Skins","Settings"}) tabs.addView(makeTab(t));
-                  bodyWrapper.addView(tabs);
-                  content = new LinearLayout(this);
-                  content.setOrientation(LinearLayout.VERTICAL);
-                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
-                  bodyWrapper.addView(content);
-                  r.addView(bodyWrapper);
-                  return r;
-              }
-              private View makeTab(String name) {
-                  TextView tv = new TextView(this);
-                  tv.setText(name);
-                  tv.setTextColor(Color.parseColor("#00FF9C"));
-                  tv.setTextSize(11);
-                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
-                  tv.setOnClickListener(v -> renderTab(name));
-                  return tv;
-              }
-              private void toggleCollapse() {
-                  collapsed = !collapsed;
-                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
-              }
-              private void renderTab(String tab) {
-                  content.removeAllViews();
-                  switch (tab) {
-                      case "Combat":
-                          addToggle("Aimbot", Native::setAimbot);
-                          addToggle("Silent Aim", Native::setSilent);
-                          addToggle("Rage Mode", Native::setRage);
-                          addSlider("Aim Speed", 1, 20, Native::setAimSpeed);
-                          addSlider("FOV", 1, 360, Native::setFov);
-                          break;
-                      case "Player":
-                          addToggle("Infinite Health", Native::setInfHealth);
-                          addToggle("Speed Boost", Native::setSpeed);
-                          addSlider("Speed Mult", 1, 10, Native::setSpeedMult);
-                          addToggle("Flight", Native::setFlight);
-                          addToggle("Noclip", Native::setNoclip);
-                          break;
-                      case "Visuals":
-                          addToggle("ESP", Native::setEsp);
-                          addToggle("Wallhack", v -> {});
-                          addToggle("Radar", v -> {});
-                          addToggle("Full Bright", v -> {});
-                          break;
-                      case "Skins":
-                          addButton("Unlock All Skins", v -> Native.setAllSkins(true));
-                          break;
-                      case "Settings":
-                          addButton("Hide Root", v -> {
-                              try {
-                                  Runtime.getRuntime().exec("su -c 'magisk --denylist add com.epicgames.fortnite'");
-                                  Runtime.getRuntime().exec("su -c 'setenforce 0'");
-                              } catch (Exception ignored) {}
-                          });
-                          addButton("Exit", v -> stopSelf());
-                          break;
-                  }
-              }
-              private void addToggle(String label, java.util.function.Consumer<Boolean> cb) {
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  row.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-                  row.addView(tv);
-                  Switch s = new Switch(this);
-                  s.setOnCheckedChangeListener((b, v) -> cb.accept(v));
-                  row.addView(s);
-                  content.addView(row);
-              }
-              private void addSlider(String label, int min, int max, java.util.function.IntConsumer cb) {
-                  LinearLayout col = new LinearLayout(this);
-                  col.setOrientation(LinearLayout.VERTICAL);
-                  col.setPadding(0, dp(4), 0, dp(4));
-                  TextView tv = new TextView(this);
-                  tv.setText(label + ": " + min); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
-                  col.addView(tv);
-                  SeekBar sb = new SeekBar(this);
-                  sb.setMax(max - min); sb.setProgress(0);
-                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                      public void onProgressChanged(SeekBar s, int p, boolean u) {
-                          int v = p + min; tv.setText(label + ": " + v); cb.accept(v);
-                      }
-                      public void onStartTrackingTouch(SeekBar s) {}
-                      public void onStopTrackingTouch(SeekBar s) {}
-                  });
-                  col.addView(sb);
-                  content.addView(col);
-              }
-              private void addButton(String label, View.OnClickListener l) {
-                  Button b = new Button(this);
-                  b.setText(label);
-                  b.setTextColor(Color.parseColor("#00FF9C"));
-                  b.setBackground(rounded("#1A1A1A", 6));
-                  b.setOnClickListener(l);
-                  content.addView(b);
-              }
-              private GradientDrawable rounded(String color, int radiusDp) {
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(color));
-                  d.setCornerRadius(dp(radiusDp));
-                  return d;
-              }
-              private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
-              @Override public void onDestroy() {
-                  super.onDestroy();
-                  if (root != null) wm.removeView(root);
-                  stopForeground(true);
-              }
-          }
-          XEOF
-
-          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
-          cmake_minimum_required(VERSION 3.18)
-          project(bryantfornitestuff LANGUAGES CXX)
-          add_library(bryantfornitestuff SHARED axion.cpp)
-          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
-          target_link_libraries(bryantfornitestuff log android)
-          XEOF
-
-          cat > app/src/main/cpp/axion.cpp <<'XEOF'
-          #include <jni.h>
-          #include <cstdint>
-          #include <cstring>
-          #include <cstdlib>
-          #include <unistd.h>
-          #include <fcntl.h>
-          #include <thread>
-          #include <atomic>
-          #include <fstream>
-          #include <map>
-          #include <string>
-          #include <sys/ptrace.h>
-          #include <sys/wait.h>
-          #include <android/log.h>
-          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
-          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
-          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
-          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
-          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
-          static pid_t g_pid = -1;
-          static int g_memfd = -1;
-          static uintptr_t g_base = 0;
-          static std::map<std::string, uintptr_t> OFF;
-          static void load_offsets() {
-              const char* paths[] = {"/sdcard/Bryantfornitestuff/offsets.txt", "/data/local/tmp/offsets.txt"};
-              for (const char* p : paths) {
-                  std::ifstream f(p);
-                  if (!f.is_open()) continue;
-                  std::string line;
-                  while (std::getline(f, line)) {
-                      if (line.empty() || line[0] == '#') continue;
-                      auto eq = line.find('=');
-                      if (eq == std::string::npos) continue;
-                      OFF[line.substr(0, eq)] = strtoull(line.substr(eq + 1).c_str(), nullptr, 16);
-                  }
-                  LOG("Loaded %zu offsets", OFF.size());
-                  return;
-              }
-          }
-          static pid_t find_pid() {
-              FILE* f = popen("pidof com.epicgames.fortnite", "r");
-              if (!f) return -1;
-              char buf[32] = {0}; fgets(buf, 32, f); pclose(f);
-              return atoi(buf);
-          }
-          static int open_mem(pid_t pid) {
-              char p[64]; snprintf(p, 64, "/proc/%d/mem", pid);
-              return open(p, O_RDWR);
-          }
-          static void aim_thread() {
-              while (aimbot || silent || rage) usleep(1000);
-          }
-          static void player_thread() {
-              while (infHealth || speed || flight || noclip || allSkins || esp) usleep(2000);
-          }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_init(JNIEnv*, jclass) {
-              load_offsets();
-              g_pid = find_pid();
-              if (g_pid <= 0) { LOG("FN not running"); return; }
-              g_memfd = open_mem(g_pid);
-              if (g_memfd < 0) { LOG("mem fail"); return; }
-              ptrace(PTRACE_ATTACH, g_pid, nullptr, nullptr);
-              waitpid(g_pid, nullptr, 0);
-              std::thread(aim_thread).detach();
-              std::thread(player_thread).detach();
-          }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setAimbot(JNIEnv*, jclass, jboolean v) { aimbot = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setSilent(JNIEnv*, jclass, jboolean v) { silent = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setRage(JNIEnv*, jclass, jboolean v) { rage = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setInfHealth(JNIEnv*, jclass, jboolean v) { infHealth = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setSpeed(JNIEnv*, jclass, jboolean v) { speed = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setFlight(JNIEnv*, jclass, jboolean v) { flight = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setNoclip(JNIEnv*, jclass, jboolean v) { noclip = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setAllSkins(JNIEnv*, jclass, jboolean v) { allSkins = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setEsp(JNIEnv*, jclass, jboolean v) { esp = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setAimSpeed(JNIEnv*, jclass, jint v) { aimSpeed = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setFov(JNIEnv*, jclass, jint v) { fov = v; }
-          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setSpeedMult(JNIEnv*, jclass, jint v) { speedMult = v; }
-          XEOF
-
-          # Dedent â€” strip leading spaces from heredoc contents
-          find . -type f \( -name "*.gradle" -o -name "*.java" -o -name "*.cpp" -o -name "*.xml" -o -name "*.txt" \) -exec sed -i 's/^          //' {} +
-          echo "Generated."
-      - name: Build APK
-        run: cd BryantFN && gradle assembleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Bryantfornitestuff-apk
-          path: BryantFN/app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
