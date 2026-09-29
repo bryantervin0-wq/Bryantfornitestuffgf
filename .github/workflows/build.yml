@@ -210,4 +210,59 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Bryantfornitestuff-apk
+          path: app/build/outputs/apk/debug/app-debug.apk.java
+          echo '    content.setOrientation(LinearLayout.VERTICAL);' >> $D/OverlayService.java
+          echo '    root.addView(content);' >> $D/OverlayService.java
+          echo '    addT("Aimbot",0);' >> $D/OverlayService.java
+          echo '    addT("Silent Aim",1);' >> $D/OverlayService.java
+          echo '    addT("Rage Mode",2);' >> $D/OverlayService.java
+          echo '    addT("Infinite Health",3);' >> $D/OverlayService.java
+          echo '    addT("Speed Boost",4);' >> $D/OverlayService.java
+          echo '    addT("Flight",5);' >> $D/OverlayService.java
+          echo '    addT("Noclip",6);' >> $D/OverlayService.java
+          echo '    addT("All Skins",7);' >> $D/OverlayService.java
+          echo '    addT("ESP",8);' >> $D/OverlayService.java
+          echo '    params=new WindowManager.LayoutParams(dp(300),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT);' >> $D/OverlayService.java
+          echo '    params.gravity=Gravity.TOP|Gravity.START;' >> $D/OverlayService.java
+          echo '    params.x=dp(20); params.y=dp(60);' >> $D/OverlayService.java
+          echo '    wm.addView(root,params);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void addT(String label,final int id){' >> $D/OverlayService.java
+          echo '    LinearLayout row=new LinearLayout(this);' >> $D/OverlayService.java
+          echo '    row.setOrientation(LinearLayout.HORIZONTAL);' >> $D/OverlayService.java
+          echo '    row.setPadding(0,dp(4),0,dp(4));' >> $D/OverlayService.java
+          echo '    TextView tv=new TextView(this);' >> $D/OverlayService.java
+          echo '    tv.setText(label);' >> $D/OverlayService.java
+          echo '    tv.setTextColor(Color.WHITE);' >> $D/OverlayService.java
+          echo '    tv.setTextSize(14);' >> $D/OverlayService.java
+          echo '    tv.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1f));' >> $D/OverlayService.java
+          echo '    row.addView(tv);' >> $D/OverlayService.java
+          echo '    Switch s=new Switch(this);' >> $D/OverlayService.java
+          echo '    s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){' >> $D/OverlayService.java
+          echo '      public void onCheckedChanged(CompoundButton b,boolean v){ setF(id,v); }' >> $D/OverlayService.java
+          echo '    });' >> $D/OverlayService.java
+          echo '    row.addView(s);' >> $D/OverlayService.java
+          echo '    content.addView(row);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  void setF(int id,boolean v){' >> $D/OverlayService.java
+          echo '    if (id==0) Native.setAimbot(v);' >> $D/OverlayService.java
+          echo '    else if (id==1) Native.setSilent(v);' >> $D/OverlayService.java
+          echo '    else if (id==2) Native.setRage(v);' >> $D/OverlayService.java
+          echo '    else if (id==3) Native.setInfHealth(v);' >> $D/OverlayService.java
+          echo '    else if (id==4) Native.setSpeed(v);' >> $D/OverlayService.java
+          echo '    else if (id==5) Native.setFlight(v);' >> $D/OverlayService.java
+          echo '    else if (id==6) Native.setNoclip(v);' >> $D/OverlayService.java
+          echo '    else if (id==7) Native.setAllSkins(v);' >> $D/OverlayService.java
+          echo '    else if (id==8) Native.setEsp(v);' >> $D/OverlayService.java
+          echo '  }' >> $D/OverlayService.java
+          echo '  int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density); }' >> $D/OverlayService.java
+          echo '  public void onDestroy(){ super.onDestroy(); if (root!=null) wm.removeView(root); stopForeground(true); }' >> $D/OverlayService.java
+          echo '}' >> $D/OverlayService.java
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bryantfornitestuff-apk
           path: app/build/outputs/apk/debug/app-debug.apk
