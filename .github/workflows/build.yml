@@ -4,20 +4,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
       - name: Install NDK
-        run: sdkmanager --install "ndk;26.1.10909125"
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
       - uses: gradle/actions/setup-gradle@v3
       - name: Generate project
         run: |
           mkdir -p BryantFN/app/src/main/java/com/bryant/bryantfornitestuff
           mkdir -p BryantFN/app/src/main/cpp
           cd BryantFN
-
           cat > settings.gradle <<'XEOF'
           pluginManagement {
               repositories { google(); mavenCentral(); gradlePluginPortal() }
@@ -29,15 +31,14 @@ jobs:
           rootProject.name = "Bryantfornitestuff"
           include ':app'
           XEOF
-
           cat > build.gradle <<'XEOF'
           XEOF
-
           cat > app/build.gradle <<'XEOF'
           plugins { id 'com.android.application' }
           android {
               namespace 'com.bryant.bryantfornitestuff'
               compileSdk 34
+              ndkVersion "26.1.10909125"
               defaultConfig {
                   applicationId "com.bryant.bryantfornitestuff"
                   minSdk 26
@@ -56,7 +57,6 @@ jobs:
           }
           dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
           XEOF
-
           cat > app/src/main/AndroidManifest.xml <<'XEOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -82,7 +82,6 @@ jobs:
               </application>
           </manifest>
           XEOF
-
           cat > app/src/main/java/com/bryant/bryantfornitestuff/MainActivity.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
           import android.content.Intent;
@@ -106,7 +105,6 @@ jobs:
               }
           }
           XEOF
-
           cat > app/src/main/java/com/bryant/bryantfornitestuff/Native.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
           public class Native {
@@ -126,7 +124,6 @@ jobs:
               public static native void setSpeedMult(int v);
           }
           XEOF
-
           cat > app/src/main/java/com/bryant/bryantfornitestuff/OverlayService.java <<'XEOF'
           package com.bryant.bryantfornitestuff;
           import android.app.*;
@@ -180,7 +177,7 @@ jobs:
                   title.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
                   titleRow.addView(title);
                   TextView collapse = new TextView(this);
-                  collapse.setText("â€”");
+                  collapse.setText("—");
                   collapse.setTextColor(Color.parseColor("#00FF9C"));
                   collapse.setTextSize(20);
                   collapse.setPadding(dp(8), 0, dp(8), 0);
@@ -199,6 +196,197 @@ jobs:
                                   wm.updateViewLayout(root, params); return true;
                           }
                           return false;
+                      }
+                  });
+                  r.addView(titleRow);
+                  bodyWrapper = new LinearLayout(this);
+                  bodyWrapper.setOrientation(LinearLayout.VERTICAL);
+                  LinearLayout tabs = new LinearLayout(this);
+                  tabs.setOrientation(LinearLayout.HORIZONTAL);
+                  for (String t : new String[]{"Combat","Player","Visuals","Skins","Settings"}) tabs.addView(makeTab(t));
+                  bodyWrapper.addView(tabs);
+                  content = new LinearLayout(this);
+                  content.setOrientation(LinearLayout.VERTICAL);
+                  content.setPadding(dp(6), dp(8), dp(6), dp(6));
+                  bodyWrapper.addView(content);
+                  r.addView(bodyWrapper);
+                  return r;
+              }
+              private View makeTab(String name) {
+                  TextView tv = new TextView(this);
+                  tv.setText(name);
+                  tv.setTextColor(Color.parseColor("#00FF9C"));
+                  tv.setTextSize(11);
+                  tv.setPadding(dp(8), dp(6), dp(8), dp(6));
+                  tv.setOnClickListener(v -> renderTab(name));
+                  return tv;
+              }
+              private void toggleCollapse() {
+                  collapsed = !collapsed;
+                  bodyWrapper.setVisibility(collapsed ? View.GONE : View.VISIBLE);
+              }
+              private void renderTab(String tab) {
+                  content.removeAllViews();
+                  switch (tab) {
+                      case "Combat":
+                          addToggle("Aimbot", Native::setAimbot);
+                          addToggle("Silent Aim", Native::setSilent);
+                          addToggle("Rage Mode", Native::setRage);
+                          addSlider("Aim Speed", 1, 20, Native::setAimSpeed);
+                          addSlider("FOV", 1, 360, Native::setFov);
+                          break;
+                      case "Player":
+                          addToggle("Infinite Health", Native::setInfHealth);
+                          addToggle("Speed Boost", Native::setSpeed);
+                          addSlider("Speed Mult", 1, 10, Native::setSpeedMult);
+                          addToggle("Flight", Native::setFlight);
+                          addToggle("Noclip", Native::setNoclip);
+                          break;
+                      case "Visuals":
+                          addToggle("ESP", Native::setEsp);
+                          addToggle("Wallhack", v -> {});
+                          addToggle("Radar", v -> {});
+                          addToggle("Full Bright", v -> {});
+                          break;
+                      case "Skins":
+                          addButton("Unlock All Skins", v -> Native.setAllSkins(true));
+                          break;
+                      case "Settings":
+                          addButton("Hide Root", v -> {
+                              try {
+                                  Runtime.getRuntime().exec("su -c 'magisk --denylist add com.epicgames.fortnite'");
+                                  Runtime.getRuntime().exec("su -c 'setenforce 0'");
+                              } catch (Exception ignored) {}
+                          });
+                          addButton("Exit", v -> stopSelf());
+                          break;
+                  }
+              }
+              private void addToggle(String label, java.util.function.Consumer<Boolean> cb) {
+                  LinearLayout row = new LinearLayout(this);
+                  row.setOrientation(LinearLayout.HORIZONTAL);
+                  row.setPadding(0, dp(4), 0, dp(4));
+                  TextView tv = new TextView(this);
+                  tv.setText(label); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
+                  tv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+                  row.addView(tv);
+                  Switch s = new Switch(this);
+                  s.setOnCheckedChangeListener((b, v) -> cb.accept(v));
+                  row.addView(s);
+                  content.addView(row);
+              }
+              private void addSlider(String label, int min, int max, java.util.function.IntConsumer cb) {
+                  LinearLayout col = new LinearLayout(this);
+                  col.setOrientation(LinearLayout.VERTICAL);
+                  col.setPadding(0, dp(4), 0, dp(4));
+                  TextView tv = new TextView(this);
+                  tv.setText(label + ": " + min); tv.setTextColor(Color.WHITE); tv.setTextSize(13);
+                  col.addView(tv);
+                  SeekBar sb = new SeekBar(this);
+                  sb.setMax(max - min); sb.setProgress(0);
+                  sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                      public void onProgressChanged(SeekBar s, int p, boolean u) {
+                          int v = p + min; tv.setText(label + ": " + v); cb.accept(v);
+                      }
+                      public void onStartTrackingTouch(SeekBar s) {}
+                      public void onStopTrackingTouch(SeekBar s) {}
+                  });
+                  col.addView(sb);
+                  content.addView(col);
+              }
+              private void addButton(String label, View.OnClickListener l) {
+                  Button b = new Button(this);
+                  b.setText(label);
+                  b.setTextColor(Color.parseColor("#00FF9C"));
+                  b.setBackground(rounded("#1A1A1A", 6));
+                  b.setOnClickListener(l);
+                  content.addView(b);
+              }
+              private GradientDrawable rounded(String color, int radiusDp) {
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(Color.parseColor(color));
+                  d.setCornerRadius(dp(radiusDp));
+                  return d;
+              }
+              private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
+              @Override public void onDestroy() {
+                  super.onDestroy();
+                  if (root != null) wm.removeView(root);
+                  stopForeground(true);
+              }
+          }
+          XEOF
+          cat > app/src/main/cpp/CMakeLists.txt <<'XEOF'
+          cmake_minimum_required(VERSION 3.18)
+          project(bryantfornitestuff LANGUAGES CXX)
+          add_library(bryantfornitestuff SHARED axion.cpp)
+          target_compile_options(bryantfornitestuff PRIVATE -O2 -fvisibility=hidden -std=c++20)
+          target_link_libraries(bryantfornitestuff log android)
+          XEOF
+          cat > app/src/main/cpp/axion.cpp <<'XEOF'
+          #include <jni.h>
+          #include <cstdint>
+          #include <cstring>
+          #include <cstdlib>
+          #include <unistd.h>
+          #include <fcntl.h>
+          #include <thread>
+          #include <atomic>
+          #include <fstream>
+          #include <map>
+          #include <string>
+          #include <sys/ptrace.h>
+          #include <sys/wait.h>
+          #include <android/log.h>
+          #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "BRYANT", __VA_ARGS__)
+          static std::atomic<bool> aimbot{false}, silent{false}, rage{false};
+          static std::atomic<bool> infHealth{false}, speed{false}, flight{false};
+          static std::atomic<bool> noclip{false}, allSkins{false}, esp{false};
+          static std::atomic<int> aimSpeed{5}, fov{90}, speedMult{3};
+          static pid_t g_pid = -1;
+          static int g_memfd = -1;
+          static uintptr_t g_base = 0;
+          static std::map<std::string, uintptr_t> OFF;
+          static void load_offsets() {
+              const char* paths[] = {"/sdcard/Bryantfornitestuff/offsets.txt", "/data/local/tmp/offsets.txt"};
+              for (const char* p : paths) {
+                  std::ifstream f(p);
+                  if (!f.is_open()) continue;
+                  std::string line;
+                  while (std::getline(f, line)) {
+                      if (line.empty() || line[0] == '#') continue;
+                      auto eq = line.find('=');
+                      if (eq == std::string::npos) continue;
+                      OFF[line.substr(0, eq)] = strtoull(line.substr(eq + 1).c_str(), nullptr, 16);
+                  }
+                  LOG("Loaded %zu offsets", OFF.size());
+                  return;
+              }
+          }
+          static pid_t find_pid() {
+              FILE* f = popen("pidof com.epicgames.fortnite", "r");
+              if (!f) return -1;
+              char buf[32] = {0}; fgets(buf, 32, f); pclose(f);
+              return atoi(buf);
+          }
+          static int open_mem(pid_t pid) {
+              char p[64]; snprintf(p, 64, "/proc/%d/mem", pid);
+              return open(p, O_RDWR);
+          }
+          static void aim_thread() { while (aimbot || silent || rage) usleep(1000); }
+          static void player_thread() { while (infHealth || speed || flight || noclip || allSkins || esp) usleep(2000); }
+          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_init(JNIEnv*, jclass) {
+              load_offsets();
+              g_pid = find_pid();
+              if (g_pid <= 0) { LOG("FN not running"); return; }
+              g_memfd = open_mem(g_pid);
+              if (g_memfd < 0) { LOG("mem fail"); return; }
+              ptrace(PTRACE_ATTACH, g_pid, nullptr, nullptr);
+              waitpid(g_pid, nullptr, 0);
+              std::thread(aim_thread).detach();
+              std::thread(player_thread).detach();
+          }
+          extern "C" JNIEXPORT void JNICALL Java_com_bryant_bryantfornitestuff_Native_setAimbot(JNIEnv*, jclass, jboolean v                       return false;
                       }
                   });
                   r.addView(titleRow);
